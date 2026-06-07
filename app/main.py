@@ -6,21 +6,25 @@ from datetime import date
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Form, Request
+from fastapi import Depends, FastAPI, File, Form, Request, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from app import repository
 from app.db import connect, init_db
-from app.extraction import build_extractor
-from app.extraction.adapter import ExtractionAdapter, ExtractionInput
+from app.extraction import build_extractor, build_input
+from app.extraction.adapter import ExtractionAdapter
 
 BASE_DIR = Path(__file__).resolve().parent
 
 # 抽出アダプタ（ADR-0002）。鍵があれば本物(Gemini)、無ければダミーに退避。
 load_dotenv()
-extractor: ExtractionAdapter = build_extractor()
+_extractor: ExtractionAdapter = build_extractor()
+
+
+def get_extractor() -> ExtractionAdapter:
+    return _extractor
 
 
 @asynccontextmanager
@@ -52,8 +56,23 @@ def index(request: Request) -> HTMLResponse:
 
 
 @app.post("/intake")
-def intake(text: str = Form("")) -> RedirectResponse:
-    source = ExtractionInput(kind="text", text=text)
+def intake(
+    text: str = Form(""),
+    image: UploadFile | None = File(None),
+    extractor: ExtractionAdapter = Depends(get_extractor),
+) -> RedirectResponse:
+    image_bytes: bytes | None = None
+    image_mime: str | None = None
+    if image is not None and image.filename:
+        data = image.file.read()
+        if data:
+            image_bytes = data
+            image_mime = image.content_type
+
+    source = build_input(text, image_bytes, image_mime)
+    if source is None:
+        return RedirectResponse(url="/", status_code=303)
+
     result = extractor.extract(source, today=date.today())
     conn = connect()
     try:

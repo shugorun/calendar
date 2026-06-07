@@ -10,16 +10,22 @@
     <main>
       <h1>{{ title }}</h1>
 
-      <form class="intake" method="post" action="/intake">
-        <label for="text">テキストを貼り付けて取り込む</label>
+      <form class="intake" method="post" action="/intake" enctype="multipart/form-data">
+        <label for="text">テキスト、または画像（スクショ）を取り込む</label>
         <textarea
           id="text"
           name="text"
-          rows="5"
+          rows="4"
           placeholder="募集内容や日程を貼り付け（例: 〇〇インターン&#10;応募締切 6/30&#10;一次面接 7/10）"
         ></textarea>
+        <div class="image-field">
+          <input type="file" id="image" name="image" accept="image/*" />
+          <span class="hint">スクショは Ctrl+V でここに貼り付けできます</span>
+        </div>
+        <img id="preview" class="preview" alt="取り込む画像のプレビュー" hidden />
         <button type="submit">取り込む</button>
       </form>
+      <script src="{{ url_for('static', path='app.js') }}"></script>
 
       <section class="events">
         {% for event in events %}
