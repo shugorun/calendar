@@ -8,7 +8,7 @@ from app.extraction.dummy import DummyExtractor
 
 def build_extractor() -> ExtractionAdapter:
     """環境変数に応じて抽出アダプタを選ぶ。鍵が無ければダミーに退避する。"""
-    provider = os.environ.get("EXTRACTION_PROVIDER", "gemini").strip().lower()
+    provider = (os.environ.get("EXTRACTION_PROVIDER") or "gemini").strip().lower()
     if provider == "gemini" and os.environ.get("GEMINI_API_KEY"):
         from app.extraction.gemini import GeminiExtractor
 

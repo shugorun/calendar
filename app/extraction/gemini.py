@@ -98,6 +98,11 @@ def _build_contents(source: ExtractionInput, today: date) -> list[str | types.Pa
     return contents
 
 
+def _resolve_model(explicit: str | None, env_value: str | None) -> str:
+    # .env に GEMINI_MODEL= と空文字が入っている場合も既定にフォールバックさせる。
+    return explicit or env_value or _DEFAULT_MODEL
+
+
 class GeminiExtractor:
     """ExtractionAdapter を満たす Gemini 実装。"""
 
@@ -106,7 +111,7 @@ class GeminiExtractor:
         if not api_key:
             raise RuntimeError("GEMINI_API_KEY が設定されていない")
         self._client = genai.Client(api_key=api_key)
-        self._model = model or os.environ.get("GEMINI_MODEL", _DEFAULT_MODEL)
+        self._model = _resolve_model(model, os.environ.get("GEMINI_MODEL"))
 
     def extract(self, source: ExtractionInput, today: date) -> ExtractionResult:
         response = self._client.models.generate_content(

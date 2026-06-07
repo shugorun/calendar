@@ -2,7 +2,13 @@
 
 from datetime import date, time
 
-from app.extraction.gemini import _EventPayload, _SchedulePayload, _to_result
+from app.extraction.gemini import (
+    _DEFAULT_MODEL,
+    _EventPayload,
+    _resolve_model,
+    _SchedulePayload,
+    _to_result,
+)
 
 
 def test_to_result_parses_dates_times_and_flags() -> None:
@@ -35,3 +41,11 @@ def test_empty_title_falls_back() -> None:
     result = _to_result(_EventPayload(event_title="", schedules=[]))
     assert result.event_title == "取り込み"
     assert result.schedules == []
+
+
+def test_resolve_model_treats_empty_as_unset() -> None:
+    # .env の GEMINI_MODEL= (空文字) でも既定にフォールバックする回帰テスト。
+    assert _resolve_model(None, "") == _DEFAULT_MODEL
+    assert _resolve_model(None, None) == _DEFAULT_MODEL
+    assert _resolve_model(None, "gemini-x") == "gemini-x"
+    assert _resolve_model("explicit", "gemini-x") == "explicit"
