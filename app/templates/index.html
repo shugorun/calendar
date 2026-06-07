@@ -44,12 +44,13 @@
             >
               <div class="cal-daynum">{{ cell.day.day }}</div>
               {% for s in cell.schedules %}
-              <div
+              <a
                 class="chip {{ s.commit_state }}{% if s.is_deadline %} deadline{% endif %}"
+                href="/events/{{ s.event_id }}"
                 title="{{ s.event_title }}: {{ s.title }}"
               >
                 {% if s.is_deadline %}⚑ {% endif %}{{ s.title }}
-              </div>
+              </a>
               {% endfor %}
             </div>
             {% endfor %}
@@ -63,7 +64,7 @@
         <ul>
           {% for s in undated %}
           <li>
-            <span class="what">{{ s.title }}</span>
+            <a class="what" href="/events/{{ s.event_id }}">{{ s.title }}</a>
             <span class="ev">{{ s.event_title }}</span>
             {% if s.raw_date_text %}<span class="raw">（{{ s.raw_date_text }}）</span>{% endif %}
           </li>

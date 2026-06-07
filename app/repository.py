@@ -118,3 +118,113 @@ def undated_schedules(conn: sqlite3.Connection) -> list[UndatedSchedule]:
         )
         for row in rows
     ]
+
+
+@dataclass
+class EditableSchedule:
+    id: int
+    title: str
+    kind: str | None
+    is_deadline: bool
+    date: str | None
+    end_date: str | None
+    time: str | None
+    raw_date_text: str | None
+
+
+@dataclass
+class EventDetail:
+    id: int
+    title: str
+    source_kind: str
+    note: str
+    commit_state: str
+    has_image: bool
+    source_text: str | None
+    schedules: list[EditableSchedule]
+
+
+@dataclass
+class ScheduleFields:
+    """予定の編集で書き換える項目。date/end_date/time は ISO 文字列か None。"""
+
+    title: str
+    kind: str | None
+    is_deadline: bool
+    date: str | None
+    end_date: str | None
+    time: str | None
+
+
+def get_event_detail(conn: sqlite3.Connection, event_id: int) -> EventDetail | None:
+    """1イベントを編集用の全項目込みで返す。無ければ None。"""
+    ev = conn.execute(
+        "SELECT id, title, source_kind, note, commit_state, source_text, "
+        "(source_image IS NOT NULL) AS has_image FROM events WHERE id = ?",
+        (event_id,),
+    ).fetchone()
+    if ev is None:
+        return None
+    rows = conn.execute(
+        "SELECT id, title, kind, is_deadline, date, end_date, time, raw_date_text "
+        "FROM schedules WHERE event_id = ? ORDER BY date IS NULL, date, id",
+        (event_id,),
+    ).fetchall()
+    schedules = [
+        EditableSchedule(
+            id=row["id"],
+            title=row["title"],
+            kind=row["kind"],
+            is_deadline=bool(row["is_deadline"]),
+            date=row["date"],
+            end_date=row["end_date"],
+            time=row["time"],
+            raw_date_text=row["raw_date_text"],
+        )
+        for row in rows
+    ]
+    return EventDetail(
+        id=ev["id"],
+        title=ev["title"],
+        source_kind=ev["source_kind"],
+        note=ev["note"],
+        commit_state=ev["commit_state"],
+        has_image=bool(ev["has_image"]),
+        source_text=ev["source_text"],
+        schedules=schedules,
+    )
+
+
+def update_event_title(conn: sqlite3.Connection, event_id: int, title: str) -> None:
+    conn.execute("UPDATE events SET title = ? WHERE id = ?", (title, event_id))
+    conn.commit()
+
+
+def delete_event(conn: sqlite3.Connection, event_id: int) -> None:
+    """イベントを削除する。配下の予定も ON DELETE CASCADE で消える。"""
+    conn.execute("DELETE FROM events WHERE id = ?", (event_id,))
+    conn.commit()
+
+
+def update_schedule(
+    conn: sqlite3.Connection, schedule_id: int, fields: ScheduleFields
+) -> None:
+    conn.execute(
+        "UPDATE schedules SET title = ?, kind = ?, is_deadline = ?, "
+        "date = ?, end_date = ?, time = ? WHERE id = ?",
+        (
+            fields.title,
+            fields.kind,
+            1 if fields.is_deadline else 0,
+            fields.date,
+            fields.end_date,
+            fields.time,
+            schedule_id,
+        ),
+    )
+    conn.commit()
+
+
+def delete_schedule(conn: sqlite3.Connection, schedule_id: int) -> None:
+    conn.execute("DELETE FROM schedules WHERE id = ?", (schedule_id,))
+    conn.commit()
