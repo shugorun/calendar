@@ -11,15 +11,16 @@ body {
 }
 
 main {
-  max-width: 48rem;
+  max-width: 56rem;
   margin: 0 auto;
 }
 
+/* --- 取り込みフォーム --- */
 .intake {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  margin: 1.5rem 0 2rem;
+  margin: 1.5rem 0 1rem;
 }
 
 .intake textarea {
@@ -55,66 +56,117 @@ main {
   border-radius: 0.4rem;
 }
 
-.events {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+/* --- カレンダー --- */
+.calendar {
+  margin-top: 2rem;
 }
 
-.event {
-  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
-  border-radius: 0.6rem;
-  padding: 1rem 1.2rem;
-}
-
-/* 浮いている = まだ確定していない見た目（破線・薄め） */
-.event.floating {
-  border-style: dashed;
-  opacity: 0.92;
-}
-
-.event h2 {
-  margin: 0 0 0.5rem;
-  font-size: 1.1rem;
+.cal-nav {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 1.5rem;
 }
 
-.schedules {
-  margin: 0;
-  padding-left: 0;
-  list-style: none;
-}
-
-.schedules li {
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
-  padding: 0.2rem 0;
-}
-
-.when {
+.cal-nav h2 {
+  margin: 0.5rem 0;
   min-width: 8rem;
-  font-variant-numeric: tabular-nums;
+  text-align: center;
 }
 
-.unknown {
+.cal-move {
+  text-decoration: none;
+  font-size: 1.2rem;
+  padding: 0.15rem 0.7rem;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-radius: 0.4rem;
+  color: inherit;
+}
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 1px;
+  border: 1px solid color-mix(in srgb, currentColor 15%, transparent);
+  background: color-mix(in srgb, currentColor 15%, transparent);
+}
+
+.cal-weekday {
+  text-align: center;
+  padding: 0.35rem 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: Canvas;
+}
+
+.cal-day {
+  min-height: 5.5rem;
+  padding: 0.25rem;
+  background: Canvas;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.cal-day.out {
+  opacity: 0.4;
+}
+
+.cal-day.today {
+  outline: 2px solid #2d7ef7;
+  outline-offset: -2px;
+}
+
+.cal-daynum {
+  font-size: 0.8rem;
   opacity: 0.7;
 }
 
-.badge {
-  font-size: 0.75rem;
-  padding: 0.05rem 0.45rem;
-  border-radius: 0.8rem;
-  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+/* 浮いている = 破線・薄め。確定したら実線になる想定。 */
+.chip {
+  font-size: 0.72rem;
+  padding: 0.08rem 0.3rem;
+  border-radius: 0.3rem;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.badge.deadline {
+.chip.floating {
+  border-style: dashed;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.chip.deadline {
   color: #c0392b;
   border-color: #c0392b;
 }
 
-.empty {
+/* --- 日時未定 --- */
+.undated {
+  margin-top: 1.5rem;
+}
+
+.undated ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.undated li {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  flex-wrap: wrap;
+  padding: 0.15rem 0;
+}
+
+.ev {
   opacity: 0.7;
+  font-size: 0.85rem;
+}
+
+.raw {
+  opacity: 0.6;
+  font-size: 0.8rem;
 }

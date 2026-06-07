@@ -40,7 +40,8 @@ class _EventPayload(BaseModel):
 def _prompt(today: date) -> str:
     return (
         "あなたは募集・案内のテキストや画像から予定を抽出するアシスタント。"
-        f"今日は {today.isoformat()}。結果は指定スキーマの JSON で返す。\n"
+        f"今日は {today.isoformat()}。結果は指定スキーマの JSON で返す。"
+        "タイトル・種類など文字列はすべて日本語で書く。\n"
         "- event_title: 入力が表す募集・案件の短い名前\n"
         "- schedules: 日付に関わる項目の配列。各要素は\n"
         "  - title: その予定の短い名前（例: 応募締切）\n"

@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app import repository
+from app import calendar_view, repository
 from app.db import connect, init_db
 from app.extraction import build_extractor, build_input
 from app.extraction.adapter import ExtractionAdapter
@@ -43,15 +43,37 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+def _parse_month(value: str | None) -> tuple[int, int]:
+    today = date.today()
+    if value:
+        parts = value.split("-")
+        if len(parts) == 2 and parts[0].isdigit() and parts[1].isdigit():
+            year, month = int(parts[0]), int(parts[1])
+            if 1 <= year <= 9999 and 1 <= month <= 12:
+                return year, month
+    return today.year, today.month
+
+
 @app.get("/", response_class=HTMLResponse)
-def index(request: Request) -> HTMLResponse:
+def index(request: Request, month: str | None = None) -> HTMLResponse:
+    year, month_num = _parse_month(month)
     conn = connect()
     try:
-        events = repository.list_events(conn)
+        dated = repository.dated_schedules(conn)
+        undated = repository.undated_schedules(conn)
     finally:
         conn.close()
+    view = calendar_view.build_month(year, month_num, dated)
     return templates.TemplateResponse(
-        request, "index.html", {"title": "未確定予定カレンダー", "events": events}
+        request,
+        "index.html",
+        {
+            "title": "未確定予定カレンダー",
+            "view": view,
+            "undated": undated,
+            "weekday_labels": calendar_view.WEEKDAY_LABELS,
+            "today": date.today().isoformat(),
+        },
     )
 
 

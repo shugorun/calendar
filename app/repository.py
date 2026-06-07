@@ -8,25 +8,27 @@ from app.extraction.adapter import ExtractionInput, ExtractionResult
 
 
 @dataclass
-class ScheduleRow:
-    id: int
+class DatedSchedule:
+    """日付を持つ予定（カレンダーに置ける）。イベント情報を含む。"""
+
+    event_id: int
+    event_title: str
+    commit_state: str
     title: str
-    kind: str | None
     is_deadline: bool
-    date: str | None
+    date: str
     end_date: str | None
     time: str | None
-    raw_date_text: str | None
 
 
 @dataclass
-class EventRow:
-    id: int
+class UndatedSchedule:
+    """日時未定の予定（カレンダーに置けない）。イベント情報を含む。"""
+
+    event_id: int
+    event_title: str
     title: str
-    source_kind: str
-    note: str
-    commit_state: str
-    schedules: list[ScheduleRow]
+    raw_date_text: str | None
 
 
 def _now_iso() -> str:
@@ -77,41 +79,42 @@ def create_event(
     return event_id
 
 
-def _schedules_for_event(conn: sqlite3.Connection, event_id: int) -> list[ScheduleRow]:
+def dated_schedules(conn: sqlite3.Connection) -> list[DatedSchedule]:
+    """日付を持つ全予定を、イベント情報込みで返す。"""
     rows = conn.execute(
-        "SELECT id, title, kind, is_deadline, date, end_date, time, raw_date_text "
-        "FROM schedules WHERE event_id = ? ORDER BY date IS NULL, date, id",
-        (event_id,),
+        "SELECT s.event_id, e.title AS event_title, e.commit_state, "
+        "s.title, s.is_deadline, s.date, s.end_date, s.time "
+        "FROM schedules s JOIN events e ON e.id = s.event_id "
+        "WHERE s.date IS NOT NULL ORDER BY s.date, s.id"
     ).fetchall()
     return [
-        ScheduleRow(
-            id=row["id"],
+        DatedSchedule(
+            event_id=row["event_id"],
+            event_title=row["event_title"],
+            commit_state=row["commit_state"],
             title=row["title"],
-            kind=row["kind"],
             is_deadline=bool(row["is_deadline"]),
             date=row["date"],
             end_date=row["end_date"],
             time=row["time"],
-            raw_date_text=row["raw_date_text"],
         )
         for row in rows
     ]
 
 
-def list_events(conn: sqlite3.Connection) -> list[EventRow]:
-    """全イベントを新しい順に、配下の予定込みで返す。"""
+def undated_schedules(conn: sqlite3.Connection) -> list[UndatedSchedule]:
+    """日時未定の全予定を、イベント情報込みで返す。"""
     rows = conn.execute(
-        "SELECT id, title, source_kind, note, commit_state FROM events "
-        "ORDER BY created_at DESC, id DESC"
+        "SELECT s.event_id, e.title AS event_title, s.title, s.raw_date_text "
+        "FROM schedules s JOIN events e ON e.id = s.event_id "
+        "WHERE s.date IS NULL ORDER BY s.id"
     ).fetchall()
     return [
-        EventRow(
-            id=row["id"],
+        UndatedSchedule(
+            event_id=row["event_id"],
+            event_title=row["event_title"],
             title=row["title"],
-            source_kind=row["source_kind"],
-            note=row["note"],
-            commit_state=row["commit_state"],
-            schedules=_schedules_for_event(conn, row["id"]),
+            raw_date_text=row["raw_date_text"],
         )
         for row in rows
     ]
