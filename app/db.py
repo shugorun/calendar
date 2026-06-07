@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS schedules (
     kind          TEXT,
     is_deadline   INTEGER NOT NULL DEFAULT 0,
     date          TEXT,
+    end_date      TEXT,
     time          TEXT,
     raw_date_text TEXT,
     created_at    TEXT NOT NULL

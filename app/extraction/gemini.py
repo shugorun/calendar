@@ -27,6 +27,7 @@ class _SchedulePayload(BaseModel):
     kind: str | None = None
     is_deadline: bool = False
     date: str | None = None
+    end_date: str | None = None
     time: str | None = None
     raw_date_text: str | None = None
 
@@ -45,8 +46,9 @@ def _prompt(today: date) -> str:
         "  - title: その予定の短い名前（例: 応募締切）\n"
         "  - kind: 種類ラベル（例: 応募締切 / 面接 / 説明会）\n"
         "  - is_deadline: 締切なら true\n"
-        "  - date: YYYY-MM-DD。年が無ければ今日以降で最も近い年。"
+        "  - date: YYYY-MM-DD（期間なら開始日）。年が無ければ今日以降で最も近い年。"
         "具体的な日が不明なら null\n"
+        "  - end_date: 期間（例: 6/25〜6/28）の終了日 YYYY-MM-DD。単日なら null\n"
         "  - time: HH:MM。不明なら null\n"
         "  - raw_date_text: 元の日付表現（例: 7月中 / 後日発表）\n"
         "日付がまったく無い入力なら schedules は空配列にする。"
@@ -80,6 +82,7 @@ def _to_result(payload: _EventPayload) -> ExtractionResult:
                 is_deadline=item.is_deadline,
                 kind=item.kind,
                 date=_parse_date(item.date),
+                end_date=_parse_date(item.end_date),
                 time=_parse_time(item.time),
                 raw_date_text=item.raw_date_text,
             )

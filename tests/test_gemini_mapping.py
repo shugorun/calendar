@@ -24,6 +24,12 @@ def test_to_result_parses_dates_times_and_flags() -> None:
             ),
             _SchedulePayload(title="説明会", date=None, raw_date_text="7月中"),
             _SchedulePayload(title="壊れた日付", date="not-a-date"),
+            _SchedulePayload(
+                title="テスト期間",
+                date="2026-06-25",
+                end_date="2026-06-28",
+                raw_date_text="6/25〜6/28",
+            ),
         ],
     )
     result = _to_result(payload)
@@ -35,6 +41,9 @@ def test_to_result_parses_dates_times_and_flags() -> None:
     assert first.is_deadline is True
     assert result.schedules[1].date is None  # 日時未定はそのまま None
     assert result.schedules[2].date is None  # 壊れた日付は None に落とす
+    period = result.schedules[3]
+    assert period.date == date(2026, 6, 25)
+    assert period.end_date == date(2026, 6, 28)  # 期間の終了日を保持
 
 
 def test_empty_title_falls_back() -> None:

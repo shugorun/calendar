@@ -35,7 +35,7 @@
             {% for s in event.schedules %}
             <li>
               <span class="when">
-                {% if s.date %}{{ s.date }}{% if s.time %} {{ s.time }}{% endif %}
+                {% if s.date %}{{ s.date }}{% if s.end_date and s.end_date != s.date %}〜{{ s.end_date }}{% endif %}{% if s.time %} {{ s.time }}{% endif %}
                 {% else %}<em class="unknown">日時未定</em>{% endif %}
               </span>
               <span class="what">{{ s.title }}</span>

@@ -14,6 +14,7 @@ class ScheduleRow:
     kind: str | None
     is_deadline: bool
     date: str | None
+    end_date: str | None
     time: str | None
     raw_date_text: str | None
 
@@ -57,15 +58,16 @@ def create_event(
     for sched in result.schedules:
         conn.execute(
             "INSERT INTO schedules "
-            "(event_id, title, kind, is_deadline, date, time, "
+            "(event_id, title, kind, is_deadline, date, end_date, time, "
             "raw_date_text, created_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 event_id,
                 sched.title,
                 sched.kind,
                 1 if sched.is_deadline else 0,
                 sched.date.isoformat() if sched.date else None,
+                sched.end_date.isoformat() if sched.end_date else None,
                 sched.time.isoformat() if sched.time else None,
                 sched.raw_date_text,
                 now,
@@ -77,7 +79,7 @@ def create_event(
 
 def _schedules_for_event(conn: sqlite3.Connection, event_id: int) -> list[ScheduleRow]:
     rows = conn.execute(
-        "SELECT id, title, kind, is_deadline, date, time, raw_date_text "
+        "SELECT id, title, kind, is_deadline, date, end_date, time, raw_date_text "
         "FROM schedules WHERE event_id = ? ORDER BY date IS NULL, date, id",
         (event_id,),
     ).fetchall()
@@ -88,6 +90,7 @@ def _schedules_for_event(conn: sqlite3.Connection, event_id: int) -> list[Schedu
             kind=row["kind"],
             is_deadline=bool(row["is_deadline"]),
             date=row["date"],
+            end_date=row["end_date"],
             time=row["time"],
             raw_date_text=row["raw_date_text"],
         )

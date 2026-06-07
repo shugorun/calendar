@@ -14,6 +14,9 @@ from app.extraction.adapter import (
 )
 
 _DATE_RE = re.compile(r"(\d{1,2})\s*[/／月]\s*(\d{1,2})")
+_RANGE_RE = re.compile(
+    r"(\d{1,2})\s*[/／月]\s*(\d{1,2})\s*[〜～~\-－]\s*(\d{1,2})\s*[/／月]\s*(\d{1,2})"
+)
 _DEADLINE_HINTS = ("締切", "〆", "期限", "まで")
 
 
@@ -32,12 +35,29 @@ def _nearest_future(month: int, day: int, today: date) -> date | None:
 def _schedules_from_lines(lines: list[str], today: date) -> list[ExtractedSchedule]:
     schedules: list[ExtractedSchedule] = []
     for line in lines:
+        is_deadline = any(hint in line for hint in _DEADLINE_HINTS)
+        # 1行に期間（例: 6/25〜6/28）があればそれを優先。なければ単日を拾う。
+        range_match = _RANGE_RE.search(line)
+        if range_match:
+            start_m, start_d, end_m, end_d = (
+                int(range_match.group(i)) for i in range(1, 5)
+            )
+            schedules.append(
+                ExtractedSchedule(
+                    title=line,
+                    is_deadline=is_deadline,
+                    date=_nearest_future(start_m, start_d, today),
+                    end_date=_nearest_future(end_m, end_d, today),
+                    raw_date_text=range_match.group(0),
+                )
+            )
+            continue
         for match in _DATE_RE.finditer(line):
             month, day = int(match.group(1)), int(match.group(2))
             schedules.append(
                 ExtractedSchedule(
                     title=line,
-                    is_deadline=any(hint in line for hint in _DEADLINE_HINTS),
+                    is_deadline=is_deadline,
                     date=_nearest_future(month, day, today),
                     raw_date_text=match.group(0),
                 )

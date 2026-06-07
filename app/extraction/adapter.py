@@ -4,12 +4,8 @@
 本物の Vision LLM 実装も、ダミー実装も、この ExtractionAdapter を満たす。
 """
 
-# フィールド名 date/time が datetime.date/time 型をシャドーするため、
-# アノテーションを遅延評価（文字列化）して実行時の衝突を避ける。
-from __future__ import annotations
-
+import datetime
 from dataclasses import dataclass, field
-from datetime import date, time
 from typing import Protocol
 
 
@@ -30,8 +26,9 @@ class ExtractedSchedule:
     title: str
     is_deadline: bool = False
     kind: str | None = None
-    date: date | None = None
-    time: time | None = None
+    date: datetime.date | None = None
+    end_date: datetime.date | None = None
+    time: datetime.time | None = None
     raw_date_text: str | None = None
 
 
@@ -44,4 +41,6 @@ class ExtractionResult:
 
 
 class ExtractionAdapter(Protocol):
-    def extract(self, source: ExtractionInput, today: date) -> ExtractionResult: ...
+    def extract(
+        self, source: ExtractionInput, today: datetime.date
+    ) -> ExtractionResult: ...

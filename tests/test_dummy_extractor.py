@@ -43,3 +43,11 @@ def test_japanese_month_day_format() -> None:
     result = _extract("説明会 7月15日")
     assert len(result.schedules) == 1
     assert result.schedules[0].date == date(2026, 7, 15)
+
+
+def test_date_range_is_captured() -> None:
+    result = _extract("Webテスト 6/25〜6/28")
+    assert len(result.schedules) == 1
+    schedule = result.schedules[0]
+    assert schedule.date == date(2026, 6, 25)
+    assert schedule.end_date == date(2026, 6, 28)
