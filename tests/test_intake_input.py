@@ -3,12 +3,14 @@
 from app.extraction import build_input
 
 
-def test_image_is_preferred_when_present() -> None:
-    src = build_input("some text", b"\x89PNG-bytes", "image/jpeg")
+def test_image_keeps_text_as_context() -> None:
+    # 画像と一緒に添えたテキストは捨てずヒントとして保持する。
+    src = build_input("PACLIC", b"\x89PNG-bytes", "image/jpeg")
     assert src is not None
     assert src.kind == "image"
     assert src.image == b"\x89PNG-bytes"
     assert src.image_mime == "image/jpeg"
+    assert src.text == "PACLIC"
 
 
 def test_text_used_when_no_image() -> None:
@@ -27,3 +29,4 @@ def test_image_defaults_mime_when_missing() -> None:
     src = build_input("", b"data", None)
     assert src is not None
     assert src.image_mime == "image/png"
+    assert src.text is None  # 空テキストは保持しない

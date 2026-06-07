@@ -19,11 +19,16 @@ def build_extractor() -> ExtractionAdapter:
 def build_input(
     text: str, image: bytes | None, image_mime: str | None
 ) -> ExtractionInput | None:
-    """取り込みフォームの値から元入力を作る。画像があれば優先。何も無ければ None。"""
+    """取り込みフォームの値から元入力を作る。
+
+    画像とテキストは両立する（スクショに題名が無いとき、添えたテキストを
+    抽出のヒントに使う）。どちらも無ければ None。
+    """
+    note = text.strip() or None
     if image:
         return ExtractionInput(
-            kind="image", image=image, image_mime=image_mime or "image/png"
+            kind="image", image=image, image_mime=image_mime or "image/png", text=note
         )
-    if text.strip():
-        return ExtractionInput(kind="text", text=text)
+    if note:
+        return ExtractionInput(kind="text", text=note)
     return None

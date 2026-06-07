@@ -41,8 +41,10 @@ def _prompt(today: date) -> str:
     return (
         "あなたは募集・案内のテキストや画像から予定を抽出するアシスタント。"
         f"今日は {today.isoformat()}。結果は指定スキーマの JSON で返す。"
-        "タイトル・種類など文字列はすべて日本語で書く。\n"
-        "- event_title: 入力が表す募集・案件の短い名前\n"
+        "タイトル・種類は最も慣用的で自然な言い方にする。\n"
+        "- event_title: 入力が表す募集・案件の短い名前。補足テキストがあれば"
+        "それを優先的にタイトルへ反映する（例: 補足『PACLIC』＋締切 → "
+        "『PACLIC 論文締切』）\n"
         "- schedules: 日付に関わる項目の配列。各要素は\n"
         "  - title: その予定の短い名前（例: 応募締切）\n"
         "  - kind: 種類ラベル（例: 応募締切 / 面接 / 説明会）\n"
@@ -94,11 +96,11 @@ def _to_result(payload: _EventPayload) -> ExtractionResult:
 
 def _build_contents(source: ExtractionInput, today: date) -> list[str | types.Part]:
     contents: list[str | types.Part] = [_prompt(today)]
-    if source.kind == "image" and source.image is not None:
+    if source.text:
+        contents.append(f"補足テキスト: {source.text}")
+    if source.image is not None:
         mime = source.image_mime or "image/png"
         contents.append(types.Part.from_bytes(data=source.image, mime_type=mime))
-    else:
-        contents.append(source.text or "")
     return contents
 
 
