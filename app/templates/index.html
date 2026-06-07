@@ -9,7 +9,48 @@
   <body>
     <main>
       <h1>{{ title }}</h1>
-      <p>ローカルで起動中です。ここに取り込み・カレンダーを実装していきます。</p>
+
+      <form class="intake" method="post" action="/intake">
+        <label for="text">テキストを貼り付けて取り込む</label>
+        <textarea
+          id="text"
+          name="text"
+          rows="5"
+          placeholder="募集内容や日程を貼り付け（例: 〇〇インターン&#10;応募締切 6/30&#10;一次面接 7/10）"
+        ></textarea>
+        <button type="submit">取り込む</button>
+      </form>
+
+      <section class="events">
+        {% for event in events %}
+        <article class="event {{ event.commit_state }}">
+          <h2>
+            {{ event.title }}
+            <span class="badge state"
+              >{{ '浮いている' if event.commit_state == 'floating' else '確定' }}</span
+            >
+          </h2>
+          {% if event.schedules %}
+          <ul class="schedules">
+            {% for s in event.schedules %}
+            <li>
+              <span class="when">
+                {% if s.date %}{{ s.date }}{% if s.time %} {{ s.time }}{% endif %}
+                {% else %}<em class="unknown">日時未定</em>{% endif %}
+              </span>
+              <span class="what">{{ s.title }}</span>
+              {% if s.is_deadline %}<span class="badge deadline">締切</span>{% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+          {% else %}
+          <p class="empty">日付は見つかりませんでした（元入力は保持しています）。</p>
+          {% endif %}
+        </article>
+        {% else %}
+        <p class="empty">まだ取り込みがありません。上のフォームから貼り付けてください。</p>
+        {% endfor %}
+      </section>
     </main>
   </body>
 </html>

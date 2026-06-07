@@ -14,3 +14,88 @@ main {
   max-width: 48rem;
   margin: 0 auto;
 }
+
+.intake {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1.5rem 0 2rem;
+}
+
+.intake textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.6rem;
+  font: inherit;
+}
+
+.intake button {
+  align-self: flex-start;
+  padding: 0.5rem 1.2rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.events {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.event {
+  border: 1px solid color-mix(in srgb, currentColor 20%, transparent);
+  border-radius: 0.6rem;
+  padding: 1rem 1.2rem;
+}
+
+/* 浮いている = まだ確定していない見た目（破線・薄め） */
+.event.floating {
+  border-style: dashed;
+  opacity: 0.92;
+}
+
+.event h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.schedules {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.schedules li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.2rem 0;
+}
+
+.when {
+  min-width: 8rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.unknown {
+  opacity: 0.7;
+}
+
+.badge {
+  font-size: 0.75rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 0.8rem;
+  border: 1px solid color-mix(in srgb, currentColor 35%, transparent);
+}
+
+.badge.deadline {
+  color: #c0392b;
+  border-color: #c0392b;
+}
+
+.empty {
+  opacity: 0.7;
+}

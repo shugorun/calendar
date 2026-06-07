@@ -29,7 +29,8 @@ uv run uvicorn app.main:app --reload
 ## 検証（commit 前に緑にする）
 
 ```sh
-uv run ruff check app
-uv run ruff format --check app
+uv run pytest
+uv run ruff check app tests
+uv run ruff format --check app tests
 uv run mypy app
 ```
