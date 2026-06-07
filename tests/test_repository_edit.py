@@ -92,3 +92,29 @@ def test_delete_event_cascades(conn: sqlite3.Connection) -> None:
     assert repository.get_event_detail(conn, event_id) is None
     remaining = conn.execute("SELECT COUNT(*) FROM schedules").fetchone()[0]
     assert remaining == 0  # ON DELETE CASCADE で予定も消える
+
+
+def test_update_note(conn: sqlite3.Connection) -> None:
+    event_id = _seed(conn)
+    repository.update_note(conn, event_id, "一週間前に準備")
+    detail = repository.get_event_detail(conn, event_id)
+    assert detail is not None
+    assert detail.note == "一週間前に準備"
+
+
+def test_get_event_image_for_image_event(conn: sqlite3.Connection) -> None:
+    source = ExtractionInput(
+        kind="image", image=b"PNGDATA", image_mime="image/png", text="PACLIC"
+    )
+    event_id = repository.create_event(
+        conn, source, ExtractionResult(event_title="PACLIC", schedules=[])
+    )
+    got = repository.get_event_image(conn, event_id)
+    assert got is not None
+    data, mime = got
+    assert data == b"PNGDATA"
+    assert mime == "image/png"
+
+
+def test_get_event_image_none_for_text_event(conn: sqlite3.Connection) -> None:
+    assert repository.get_event_image(conn, _seed(conn)) is None

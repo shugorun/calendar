@@ -7,7 +7,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -123,6 +123,29 @@ def edit_event(event_id: int, title: str = Form(...)) -> RedirectResponse:
     conn = connect()
     try:
         repository.update_event_title(conn, event_id, title)
+    finally:
+        conn.close()
+    return RedirectResponse(url=f"/events/{event_id}", status_code=303)
+
+
+@app.get("/events/{event_id}/image")
+def event_image(event_id: int) -> Response:
+    conn = connect()
+    try:
+        image = repository.get_event_image(conn, event_id)
+    finally:
+        conn.close()
+    if image is None:
+        raise HTTPException(status_code=404, detail="画像がありません")
+    data, mime = image
+    return Response(content=data, media_type=mime)
+
+
+@app.post("/events/{event_id}/note")
+def edit_note(event_id: int, note: str = Form("")) -> RedirectResponse:
+    conn = connect()
+    try:
+        repository.update_note(conn, event_id, note)
     finally:
         conn.close()
     return RedirectResponse(url=f"/events/{event_id}", status_code=303)

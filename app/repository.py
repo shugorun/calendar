@@ -228,3 +228,21 @@ def update_schedule(
 def delete_schedule(conn: sqlite3.Connection, schedule_id: int) -> None:
     conn.execute("DELETE FROM schedules WHERE id = ?", (schedule_id,))
     conn.commit()
+
+
+def update_note(conn: sqlite3.Connection, event_id: int, note: str) -> None:
+    conn.execute("UPDATE events SET note = ? WHERE id = ?", (note, event_id))
+    conn.commit()
+
+
+def get_event_image(
+    conn: sqlite3.Connection, event_id: int
+) -> tuple[bytes, str] | None:
+    """イベントの元画像と MIME を返す。画像が無ければ None。"""
+    row = conn.execute(
+        "SELECT source_image, source_image_mime FROM events WHERE id = ?",
+        (event_id,),
+    ).fetchone()
+    if row is None or row["source_image"] is None:
+        return None
+    return row["source_image"], row["source_image_mime"] or "image/png"
