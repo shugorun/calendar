@@ -1,2 +1,13 @@
 .claude
 *.json
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.mypy_cache/
+.ruff_cache/
+
+# Local data & secrets
+data/
+.env
