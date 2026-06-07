@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 from datetime import date
 from pathlib import Path
 
+from dotenv import load_dotenv
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
@@ -12,13 +13,14 @@ from fastapi.templating import Jinja2Templates
 
 from app import repository
 from app.db import connect, init_db
+from app.extraction import build_extractor
 from app.extraction.adapter import ExtractionAdapter, ExtractionInput
-from app.extraction.dummy import DummyExtractor
 
 BASE_DIR = Path(__file__).resolve().parent
 
-# 抽出アダプタ（ADR-0002）。本物の Vision LLM 実装に差し替えるまではダミー。
-extractor: ExtractionAdapter = DummyExtractor()
+# 抽出アダプタ（ADR-0002）。鍵があれば本物(Gemini)、無ければダミーに退避。
+load_dotenv()
+extractor: ExtractionAdapter = build_extractor()
 
 
 @asynccontextmanager
