@@ -128,6 +128,8 @@ class GeminiExtractor:
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 response_schema=_EventPayload,
+                # 単純な構造化抽出なので思考を切って低遅延化する。
+                thinking_config=types.ThinkingConfig(thinking_budget=0),
             ),
         )
         payload = response.parsed
