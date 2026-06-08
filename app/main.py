@@ -128,6 +128,16 @@ def edit_event(event_id: int, title: str = Form(...)) -> RedirectResponse:
     return RedirectResponse(url=f"/events/{event_id}", status_code=303)
 
 
+@app.post("/events/{event_id}/commit")
+def set_commit_state_route(event_id: int, state: str = Form(...)) -> RedirectResponse:
+    conn = connect()
+    try:
+        repository.set_commit_state(conn, event_id, state)
+    finally:
+        conn.close()
+    return RedirectResponse(url=f"/events/{event_id}", status_code=303)
+
+
 @app.get("/events/{event_id}/image")
 def event_image(event_id: int) -> Response:
     conn = connect()

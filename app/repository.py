@@ -200,6 +200,17 @@ def update_event_title(conn: sqlite3.Connection, event_id: int, title: str) -> N
     conn.commit()
 
 
+COMMIT_STATES = ("floating", "committed")
+
+
+def set_commit_state(conn: sqlite3.Connection, event_id: int, state: str) -> None:
+    """イベントのコミット軸を設定する（往復可能。CONTEXT: 確定↔浮いている）。"""
+    if state not in COMMIT_STATES:
+        raise ValueError(f"未知のコミット状態: {state!r}（{COMMIT_STATES} のいずれか）")
+    conn.execute("UPDATE events SET commit_state = ? WHERE id = ?", (state, event_id))
+    conn.commit()
+
+
 def delete_event(conn: sqlite3.Connection, event_id: int) -> None:
     """イベントを削除する。配下の予定も ON DELETE CASCADE で消える。"""
     conn.execute("DELETE FROM events WHERE id = ?", (event_id,))

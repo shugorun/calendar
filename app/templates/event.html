@@ -15,6 +15,22 @@
         <button type="submit">名前を保存</button>
       </form>
 
+      <div class="commit-bar {{ event.commit_state }}">
+        <span class="commit-label">
+          状態: {% if event.commit_state == 'committed' %}確定{% else %}浮いている{% endif %}
+        </span>
+        <form method="post" action="/events/{{ event.id }}/commit" class="commit-toggle">
+          <input
+            type="hidden"
+            name="state"
+            value="{% if event.commit_state == 'committed' %}floating{% else %}committed{% endif %}"
+          />
+          <button type="submit">
+            {% if event.commit_state == 'committed' %}確定を取り消す{% else %}確定にする{% endif %}
+          </button>
+        </form>
+      </div>
+
       <h2>予定</h2>
       {% for s in event.schedules %}
       <form method="post" action="/schedules/{{ s.id }}/edit" class="sched-form">

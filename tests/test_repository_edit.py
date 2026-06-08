@@ -102,6 +102,47 @@ def test_update_note(conn: sqlite3.Connection) -> None:
     assert detail.note == "一週間前に準備"
 
 
+def test_commit_state_defaults_to_floating(conn: sqlite3.Connection) -> None:
+    detail = repository.get_event_detail(conn, _seed(conn))
+    assert detail is not None
+    assert detail.commit_state == "floating"  # 取り込み直後は浮いている
+
+
+def test_set_commit_state_round_trips(conn: sqlite3.Connection) -> None:
+    event_id = _seed(conn)
+    repository.set_commit_state(conn, event_id, "committed")
+    committed = repository.get_event_detail(conn, event_id)
+    assert committed is not None
+    assert committed.commit_state == "committed"
+    repository.set_commit_state(conn, event_id, "floating")  # 往復して戻せる
+    floated = repository.get_event_detail(conn, event_id)
+    assert floated is not None
+    assert floated.commit_state == "floating"
+
+
+def test_commit_does_not_require_a_dated_schedule(conn: sqlite3.Connection) -> None:
+    # コミット軸 ⊥ 日時の確かさ軸: 日付未定だけのイベントでも確定にできる。
+    source = ExtractionInput(kind="text", text="△△インターン")
+    event_id = repository.create_event(
+        conn,
+        source,
+        ExtractionResult(
+            event_title="△△インターン",
+            schedules=[ExtractedSchedule(title="応募締切", raw_date_text="後日発表")],
+        ),
+    )
+    repository.set_commit_state(conn, event_id, "committed")
+    detail = repository.get_event_detail(conn, event_id)
+    assert detail is not None
+    assert detail.commit_state == "committed"
+    assert all(s.date is None for s in detail.schedules)
+
+
+def test_set_commit_state_rejects_unknown_value(conn: sqlite3.Connection) -> None:
+    with pytest.raises(ValueError, match="未知のコミット状態"):
+        repository.set_commit_state(conn, _seed(conn), "maybe")
+
+
 def test_get_event_image_for_image_event(conn: sqlite3.Connection) -> None:
     source = ExtractionInput(
         kind="image", image=b"PNGDATA", image_mime="image/png", text="PACLIC"

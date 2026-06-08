@@ -192,6 +192,41 @@ main {
   padding: 0.3rem 0.5rem;
 }
 
+/* --- コミット軸（浮いている↔確定）。チップの破線/実線と対応させる。 --- */
+.commit-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin: 0 0 1.5rem;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.4rem;
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+}
+
+.commit-bar.floating {
+  border-style: dashed;
+  background: color-mix(in srgb, currentColor 6%, transparent);
+}
+
+.commit-bar.committed {
+  border-color: #2d7ef7;
+  background: color-mix(in srgb, #2d7ef7 10%, transparent);
+}
+
+.commit-label {
+  font-weight: 600;
+}
+
+.commit-toggle {
+  margin-left: auto;
+}
+
+.commit-toggle button {
+  font: inherit;
+  padding: 0.3rem 0.9rem;
+  cursor: pointer;
+}
+
 .sched-form {
   display: flex;
   align-items: center;
