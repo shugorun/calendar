@@ -50,7 +50,7 @@
                 href="/events/{{ s.event_id }}"
                 title="{{ s.event_title }}: {{ s.title }}{% if s.is_approximate %}（日付は目安）{% endif %}"
               >
-                {% if s.is_deadline %}⚑ {% endif %}{% if s.is_approximate %}~{% endif %}{{ s.title }}
+                {% if s.is_deadline %}⚑ {% endif %}{{ s.title }}{% if s.is_approximate %} ~{% endif %}
               </a>
               {% endfor %}
             </div>
