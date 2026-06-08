@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from datetime import date
+from datetime import date, time
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -75,6 +75,16 @@ def index(request: Request, month: str | None = None) -> HTMLResponse:
             "today": date.today().isoformat(),
         },
     )
+
+
+def _norm_time(value: str) -> str | None:
+    """フォームの時刻文字列を 24 時間表記 HH:MM に正規化する。空・不正は None。"""
+    if not value:
+        return None
+    try:
+        return time.fromisoformat(value).isoformat(timespec="minutes")
+    except ValueError:
+        return None
 
 
 def _month_url(month: str | None) -> str:
@@ -215,8 +225,8 @@ def edit_schedule(
         is_approximate=is_approximate,
         date=date or None,
         end_date=end_date or None,
-        time=time or None,
-        end_time=end_time or None,
+        time=_norm_time(time),
+        end_time=_norm_time(end_time),
     )
     conn = connect()
     try:
