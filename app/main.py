@@ -140,10 +140,23 @@ def edit_event(event_id: int, title: str = Form(...)) -> RedirectResponse:
 
 
 @app.post("/events/{event_id}/commit")
-def set_commit_state_route(event_id: int, state: str = Form(...)) -> RedirectResponse:
+def commit_event_route(event_id: int, state: str = Form(...)) -> RedirectResponse:
+    """一括確定: イベント配下の全予定をまとめて切り替える。"""
     conn = connect()
     try:
-        repository.set_commit_state(conn, event_id, state)
+        repository.set_event_commit_state(conn, event_id, state)
+    finally:
+        conn.close()
+    return RedirectResponse(url=f"/events/{event_id}", status_code=303)
+
+
+@app.post("/schedules/{schedule_id}/commit")
+def commit_schedule_route(
+    schedule_id: int, event_id: int = Form(...), state: str = Form(...)
+) -> RedirectResponse:
+    conn = connect()
+    try:
+        repository.set_schedule_commit_state(conn, schedule_id, state)
     finally:
         conn.close()
     return RedirectResponse(url=f"/events/{event_id}", status_code=303)

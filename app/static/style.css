@@ -227,13 +227,46 @@ main {
   cursor: pointer;
 }
 
+/* 予定1件のまとまり。左の縁で確定（実線・青）/浮いている（破線）を示す。 */
+.sched {
+  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  border-left: 3px solid transparent;
+  padding: 0.5rem 0 0.5rem 0.6rem;
+}
+
+.sched.committed {
+  border-left-color: #2d7ef7;
+}
+
+.sched.floating {
+  border-left-style: dashed;
+  border-left-color: color-mix(in srgb, currentColor 30%, transparent);
+}
+
 .sched-form {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   flex-wrap: wrap;
-  padding: 0.6rem 0;
-  border-top: 1px solid color-mix(in srgb, currentColor 12%, transparent);
+  padding: 0.1rem 0;
+}
+
+.sched-commit {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+
+.sched-state {
+  font-size: 0.85rem;
+  opacity: 0.75;
+}
+
+.sched-commit button {
+  font: inherit;
+  padding: 0.2rem 0.7rem;
+  cursor: pointer;
 }
 
 .sched-form .sched-title {

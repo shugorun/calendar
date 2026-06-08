@@ -19,42 +19,58 @@
         <button type="submit">名前を保存</button>
       </form>
 
-      <div class="commit-bar {{ event.commit_state }}">
-        <span class="commit-label">
-          状態: {% if event.commit_state == 'committed' %}確定{% else %}浮いている{% endif %}
-        </span>
+      {% if event.schedules %}
+      {% set total = event.schedules | length %}
+      {% set all_committed = event.committed_count == total %}
+      <div class="commit-bar {% if all_committed %}committed{% else %}floating{% endif %}">
+        <span class="commit-label">確定 {{ event.committed_count }} / {{ total }}</span>
         <form method="post" action="/events/{{ event.id }}/commit" class="commit-toggle">
           <input
             type="hidden"
             name="state"
-            value="{% if event.commit_state == 'committed' %}floating{% else %}committed{% endif %}"
+            value="{% if all_committed %}floating{% else %}committed{% endif %}"
           />
           <button type="submit">
-            {% if event.commit_state == 'committed' %}確定を取り消す{% else %}確定にする{% endif %}
+            {% if all_committed %}全予定の確定を取り消す{% else %}全予定をまとめて確定{% endif %}
           </button>
         </form>
       </div>
+      {% endif %}
 
       <h2>予定</h2>
       {% for s in event.schedules %}
-      <form method="post" action="/schedules/{{ s.id }}/edit" class="sched-form">
-        <input type="hidden" name="event_id" value="{{ event.id }}" />
-        <input class="sched-title" name="title" value="{{ s.title }}" aria-label="予定名" />
-        <label>日付 <input type="date" name="date" value="{{ s.date or '' }}" /></label>
-        <label>終了 <input type="date" name="end_date" value="{{ s.end_date or '' }}" /></label>
-        <label>時刻 <input type="time" name="time" value="{{ s.time or '' }}" /></label>
-        <label>
-          <input type="checkbox" name="is_deadline" value="true" {% if s.is_deadline %}checked{% endif %} />
-          締切
-        </label>
-        {% if s.raw_date_text %}<span class="raw">原文: {{ s.raw_date_text }}</span>{% endif %}
-        <span class="sched-actions">
-          <button type="submit">保存</button>
-          <button type="submit" formaction="/schedules/{{ s.id }}/delete" class="danger">
-            削除
+      <div class="sched {{ s.commit_state }}">
+        <form method="post" action="/schedules/{{ s.id }}/edit" class="sched-form">
+          <input type="hidden" name="event_id" value="{{ event.id }}" />
+          <input class="sched-title" name="title" value="{{ s.title }}" aria-label="予定名" />
+          <label>日付 <input type="date" name="date" value="{{ s.date or '' }}" /></label>
+          <label>終了 <input type="date" name="end_date" value="{{ s.end_date or '' }}" /></label>
+          <label>時刻 <input type="time" name="time" value="{{ s.time or '' }}" /></label>
+          <label>
+            <input type="checkbox" name="is_deadline" value="true" {% if s.is_deadline %}checked{% endif %} />
+            締切
+          </label>
+          {% if s.raw_date_text %}<span class="raw">原文: {{ s.raw_date_text }}</span>{% endif %}
+          <span class="sched-actions">
+            <button type="submit">保存</button>
+            <button type="submit" formaction="/schedules/{{ s.id }}/delete" class="danger">
+              削除
+            </button>
+          </span>
+        </form>
+        <form method="post" action="/schedules/{{ s.id }}/commit" class="sched-commit">
+          <input type="hidden" name="event_id" value="{{ event.id }}" />
+          <input
+            type="hidden"
+            name="state"
+            value="{% if s.commit_state == 'committed' %}floating{% else %}committed{% endif %}"
+          />
+          <span class="sched-state">{% if s.commit_state == 'committed' %}確定{% else %}浮いている{% endif %}</span>
+          <button type="submit">
+            {% if s.commit_state == 'committed' %}確定を取り消す{% else %}確定にする{% endif %}
           </button>
-        </span>
-      </form>
+        </form>
+      </div>
       {% else %}
       <p class="empty">予定はありません（日付を入れると追えます）。</p>
       {% endfor %}

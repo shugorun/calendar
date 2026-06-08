@@ -91,7 +91,7 @@ def earliest_dated_month(conn: sqlite3.Connection, event_id: int) -> str | None:
 def dated_schedules(conn: sqlite3.Connection) -> list[DatedSchedule]:
     """日付を持つ全予定を、イベント情報込みで返す。"""
     rows = conn.execute(
-        "SELECT s.event_id, e.title AS event_title, e.commit_state, "
+        "SELECT s.event_id, e.title AS event_title, s.commit_state, "
         "s.title, s.is_deadline, s.date, s.end_date, s.time "
         "FROM schedules s JOIN events e ON e.id = s.event_id "
         "WHERE s.date IS NOT NULL ORDER BY s.date, s.id"
@@ -139,6 +139,7 @@ class EditableSchedule:
     end_date: str | None
     time: str | None
     raw_date_text: str | None
+    commit_state: str
 
 
 @dataclass
@@ -147,10 +148,10 @@ class EventDetail:
     title: str
     source_kind: str
     note: str
-    commit_state: str
     has_image: bool
     source_text: str | None
     schedules: list[EditableSchedule]
+    committed_count: int  # 配下で確定済みの予定数（一括確定UIの判定用）
     home_month: str | None  # 最初の日付の月 "YYYY-MM"。日付付き予定が無ければ None
 
 
@@ -169,14 +170,15 @@ class ScheduleFields:
 def get_event_detail(conn: sqlite3.Connection, event_id: int) -> EventDetail | None:
     """1イベントを編集用の全項目込みで返す。無ければ None。"""
     ev = conn.execute(
-        "SELECT id, title, source_kind, note, commit_state, source_text, "
+        "SELECT id, title, source_kind, note, source_text, "
         "(source_image IS NOT NULL) AS has_image FROM events WHERE id = ?",
         (event_id,),
     ).fetchone()
     if ev is None:
         return None
     rows = conn.execute(
-        "SELECT id, title, kind, is_deadline, date, end_date, time, raw_date_text "
+        "SELECT id, title, kind, is_deadline, date, end_date, time, "
+        "raw_date_text, commit_state "
         "FROM schedules WHERE event_id = ? ORDER BY date IS NULL, date, id",
         (event_id,),
     ).fetchall()
@@ -190,6 +192,7 @@ def get_event_detail(conn: sqlite3.Connection, event_id: int) -> EventDetail | N
             end_date=row["end_date"],
             time=row["time"],
             raw_date_text=row["raw_date_text"],
+            commit_state=row["commit_state"],
         )
         for row in rows
     ]
@@ -199,10 +202,10 @@ def get_event_detail(conn: sqlite3.Connection, event_id: int) -> EventDetail | N
         title=ev["title"],
         source_kind=ev["source_kind"],
         note=ev["note"],
-        commit_state=ev["commit_state"],
         has_image=bool(ev["has_image"]),
         source_text=ev["source_text"],
         schedules=schedules,
+        committed_count=sum(1 for s in schedules if s.commit_state == "committed"),
         home_month=min(dated)[:7] if dated else None,
     )
 
@@ -215,11 +218,28 @@ def update_event_title(conn: sqlite3.Connection, event_id: int, title: str) -> N
 COMMIT_STATES = ("floating", "committed")
 
 
-def set_commit_state(conn: sqlite3.Connection, event_id: int, state: str) -> None:
-    """イベントのコミット軸を設定する（往復可能。CONTEXT: 確定↔浮いている）。"""
+def _check_commit_state(state: str) -> None:
     if state not in COMMIT_STATES:
         raise ValueError(f"未知のコミット状態: {state!r}（{COMMIT_STATES} のいずれか）")
-    conn.execute("UPDATE events SET commit_state = ? WHERE id = ?", (state, event_id))
+
+
+def set_schedule_commit_state(
+    conn: sqlite3.Connection, schedule_id: int, state: str
+) -> None:
+    """1予定のコミット軸を設定する（往復可能。CONTEXT: 確定↔浮いている）。"""
+    _check_commit_state(state)
+    conn.execute(
+        "UPDATE schedules SET commit_state = ? WHERE id = ?", (state, schedule_id)
+    )
+    conn.commit()
+
+
+def set_event_commit_state(conn: sqlite3.Connection, event_id: int, state: str) -> None:
+    """イベント配下の全予定をまとめて確定／浮いているにする（一括確定）。"""
+    _check_commit_state(state)
+    conn.execute(
+        "UPDATE schedules SET commit_state = ? WHERE event_id = ?", (state, event_id)
+    )
     conn.commit()
 
 
