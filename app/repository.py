@@ -16,6 +16,7 @@ class DatedSchedule:
     commit_state: str
     title: str
     is_deadline: bool
+    is_approximate: bool
     date: str
     end_date: str | None
     time: str | None
@@ -60,14 +61,15 @@ def create_event(
     for sched in result.schedules:
         conn.execute(
             "INSERT INTO schedules "
-            "(event_id, title, kind, is_deadline, date, end_date, time, "
-            "end_time, raw_date_text, created_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "(event_id, title, kind, is_deadline, is_approximate, date, end_date, "
+            "time, end_time, raw_date_text, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 event_id,
                 sched.title,
                 sched.kind,
                 1 if sched.is_deadline else 0,
+                1 if sched.is_approximate else 0,
                 sched.date.isoformat() if sched.date else None,
                 sched.end_date.isoformat() if sched.end_date else None,
                 sched.time.isoformat() if sched.time else None,
@@ -93,7 +95,7 @@ def dated_schedules(conn: sqlite3.Connection) -> list[DatedSchedule]:
     """日付を持つ全予定を、イベント情報込みで返す。"""
     rows = conn.execute(
         "SELECT s.event_id, e.title AS event_title, s.commit_state, "
-        "s.title, s.is_deadline, s.date, s.end_date, s.time "
+        "s.title, s.is_deadline, s.is_approximate, s.date, s.end_date, s.time "
         "FROM schedules s JOIN events e ON e.id = s.event_id "
         "WHERE s.date IS NOT NULL ORDER BY s.date, s.id"
     ).fetchall()
@@ -104,6 +106,7 @@ def dated_schedules(conn: sqlite3.Connection) -> list[DatedSchedule]:
             commit_state=row["commit_state"],
             title=row["title"],
             is_deadline=bool(row["is_deadline"]),
+            is_approximate=bool(row["is_approximate"]),
             date=row["date"],
             end_date=row["end_date"],
             time=row["time"],
@@ -136,6 +139,7 @@ class EditableSchedule:
     title: str
     kind: str | None
     is_deadline: bool
+    is_approximate: bool
     date: str | None
     end_date: str | None
     time: str | None
@@ -164,6 +168,7 @@ class ScheduleFields:
     title: str
     kind: str | None
     is_deadline: bool
+    is_approximate: bool
     date: str | None
     end_date: str | None
     time: str | None
@@ -180,8 +185,8 @@ def get_event_detail(conn: sqlite3.Connection, event_id: int) -> EventDetail | N
     if ev is None:
         return None
     rows = conn.execute(
-        "SELECT id, title, kind, is_deadline, date, end_date, time, end_time, "
-        "raw_date_text, commit_state "
+        "SELECT id, title, kind, is_deadline, is_approximate, date, end_date, "
+        "time, end_time, raw_date_text, commit_state "
         "FROM schedules WHERE event_id = ? ORDER BY date IS NULL, date, id",
         (event_id,),
     ).fetchall()
@@ -191,6 +196,7 @@ def get_event_detail(conn: sqlite3.Connection, event_id: int) -> EventDetail | N
             title=row["title"],
             kind=row["kind"],
             is_deadline=bool(row["is_deadline"]),
+            is_approximate=bool(row["is_approximate"]),
             date=row["date"],
             end_date=row["end_date"],
             time=row["time"],
@@ -258,11 +264,13 @@ def update_schedule(
 ) -> None:
     conn.execute(
         "UPDATE schedules SET title = ?, kind = ?, is_deadline = ?, "
-        "date = ?, end_date = ?, time = ?, end_time = ? WHERE id = ?",
+        "is_approximate = ?, date = ?, end_date = ?, time = ?, end_time = ? "
+        "WHERE id = ?",
         (
             fields.title,
             fields.kind,
             1 if fields.is_deadline else 0,
+            1 if fields.is_approximate else 0,
             fields.date,
             fields.end_date,
             fields.time,

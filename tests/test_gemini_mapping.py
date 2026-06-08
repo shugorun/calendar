@@ -31,6 +31,12 @@ def test_to_result_parses_dates_times_and_flags() -> None:
                 end_date="2026-06-28",
                 raw_date_text="6/25〜6/28",
             ),
+            _SchedulePayload(
+                title="合否連絡",
+                date="2026-06-12",
+                is_approximate=True,
+                raw_date_text="6/12以降随時",
+            ),
         ],
     )
     result = _to_result(payload)
@@ -46,6 +52,9 @@ def test_to_result_parses_dates_times_and_flags() -> None:
     period = result.schedules[3]
     assert period.date == date(2026, 6, 25)
     assert period.end_date == date(2026, 6, 28)  # 期間の終了日を保持
+    approx = result.schedules[4]
+    assert approx.date == date(2026, 6, 12)
+    assert approx.is_approximate is True  # 「6/12以降随時」は目安として写す
 
 
 def test_empty_title_falls_back() -> None:

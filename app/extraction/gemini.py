@@ -26,6 +26,7 @@ class _SchedulePayload(BaseModel):
     title: str
     kind: str | None = None
     is_deadline: bool = False
+    is_approximate: bool = False
     date: str | None = None
     end_date: str | None = None
     time: str | None = None
@@ -52,8 +53,10 @@ def _prompt(today: date) -> str:
         "（例:『論文投稿締切』ではなく『PACLIC論文投稿締切』）\n"
         "  - kind: 種類ラベル（例: 応募締切 / 面接 / 説明会）\n"
         "  - is_deadline: 締切なら true\n"
-        "  - date: YYYY-MM-DD（期間なら開始日）。年が無ければ今日以降で最も近い年。"
-        "具体的な日が不明なら null\n"
+        "  - is_approximate: 日付が『◯◯以降』『随時』『◯週間程度』『目安』『頃』など、"
+        "特定の単日に確定していない曖昧な表現なら true。確定した単日なら false\n"
+        "  - date: YYYY-MM-DD（期間なら開始日。is_approximate なら最も早い日）。"
+        "年が無ければ今日以降で最も近い年。具体的な日が全く不明なら null\n"
         "  - end_date: 期間（例: 6/25〜6/28）の終了日 YYYY-MM-DD。単日なら null\n"
         "  - time: 開始時刻 HH:MM。不明なら null\n"
         "  - end_time: 終了時刻 HH:MM（例: 14:00〜15:00 の 15:00）。無ければ null\n"
@@ -87,6 +90,7 @@ def _to_result(payload: _EventPayload) -> ExtractionResult:
             ExtractedSchedule(
                 title=item.title,
                 is_deadline=item.is_deadline,
+                is_approximate=item.is_approximate,
                 kind=item.kind,
                 date=_parse_date(item.date),
                 end_date=_parse_date(item.end_date),

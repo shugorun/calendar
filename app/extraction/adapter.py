@@ -25,6 +25,7 @@ class ExtractedSchedule:
 
     title: str
     is_deadline: bool = False
+    is_approximate: bool = False  # 日付が「6/12以降」「随時」等で確定でない（目安）
     kind: str | None = None
     date: datetime.date | None = None
     end_date: datetime.date | None = None

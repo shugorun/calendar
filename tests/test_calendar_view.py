@@ -13,6 +13,7 @@ def _sched(start: str, end: str | None = None) -> DatedSchedule:
         commit_state="floating",
         title="x",
         is_deadline=False,
+        is_approximate=False,
         date=start,
         end_date=end,
         time=None,

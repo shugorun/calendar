@@ -150,6 +150,13 @@ main {
   border-color: #c0392b;
 }
 
+/* 目安（日付が「以降／随時／程度」など確定でない）。斜体＋点線下線で示す。 */
+.chip.approximate {
+  font-style: italic;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+}
+
 /* --- 日時未定 --- */
 .undated {
   margin-top: 1.5rem;

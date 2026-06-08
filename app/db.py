@@ -36,6 +36,7 @@ CREATE TABLE IF NOT EXISTS schedules (
     end_date      TEXT,
     time          TEXT,
     end_time      TEXT,
+    is_approximate INTEGER NOT NULL DEFAULT 0,
     raw_date_text TEXT,
     commit_state  TEXT NOT NULL DEFAULT 'floating'
                   CHECK (commit_state IN ('floating', 'committed')),
@@ -57,6 +58,10 @@ def _migrate(conn: sqlite3.Connection) -> None:
         )
     if "end_time" not in sched_cols:
         conn.execute("ALTER TABLE schedules ADD COLUMN end_time TEXT")
+    if "is_approximate" not in sched_cols:
+        conn.execute(
+            "ALTER TABLE schedules ADD COLUMN is_approximate INTEGER NOT NULL DEFAULT 0"
+        )
     event_cols = {row["name"] for row in conn.execute("PRAGMA table_info(events)")}
     if "commit_state" in event_cols:
         # 旧モデルの親イベントの確定状態を、各予定へ引き継いでから列を畳む。

@@ -51,6 +51,10 @@
             <input type="checkbox" name="is_deadline" value="true" {% if s.is_deadline %}checked{% endif %} />
             締切
           </label>
+          <label>
+            <input type="checkbox" name="is_approximate" value="true" {% if s.is_approximate %}checked{% endif %} />
+            目安
+          </label>
           {% if s.raw_date_text %}<span class="raw">原文: {{ s.raw_date_text }}</span>{% endif %}
           <span class="sched-actions">
             <button type="submit">保存</button>
