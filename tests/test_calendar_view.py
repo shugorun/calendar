@@ -43,6 +43,10 @@ def test_prev_next_month_wrap_year() -> None:
     assert view.next_month == "2026-02"
 
 
+def test_ym_is_the_viewed_month() -> None:
+    assert build_month(2026, 8, []).ym == "2026-08"
+
+
 def test_in_month_flag_matches_month() -> None:
     view = build_month(2026, 6, [])
     for week in view.weeks:

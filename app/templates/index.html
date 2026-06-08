@@ -11,6 +11,7 @@
       <h1>{{ title }}</h1>
 
       <form class="intake" method="post" action="/intake" enctype="multipart/form-data">
+        <input type="hidden" name="month" value="{{ view.ym }}" />
         <label for="text">テキスト、または画像（スクショ）を取り込む</label>
         <textarea
           id="text"

@@ -21,6 +21,7 @@ class DayCell:
 class MonthView:
     year: int
     month: int
+    ym: str  # 表示中の月 "YYYY-MM"
     weeks: list[list[DayCell]]
     prev_month: str  # "YYYY-MM"
     next_month: str
@@ -61,6 +62,7 @@ def build_month(year: int, month: int, dated: list[DatedSchedule]) -> MonthView:
     return MonthView(
         year=year,
         month=month,
+        ym=_ym(year, month),
         weeks=weeks,
         prev_month=_ym(prev_year, prev_month),
         next_month=_ym(next_year, next_month),

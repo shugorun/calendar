@@ -77,10 +77,19 @@ def index(request: Request, month: str | None = None) -> HTMLResponse:
     )
 
 
+def _month_url(month: str | None) -> str:
+    """有効な "YYYY-MM" ならその月のカレンダーへ、無ければトップへ。"""
+    if not month:
+        return "/"
+    year, month_num = _parse_month(month)
+    return f"/?month={year:04d}-{month_num:02d}"
+
+
 @app.post("/intake")
 def intake(
     text: str = Form(""),
     image: UploadFile | None = File(None),
+    month: str = Form(""),
     extractor: ExtractionAdapter = Depends(get_extractor),
 ) -> RedirectResponse:
     image_bytes: bytes | None = None
@@ -93,15 +102,17 @@ def intake(
 
     source = build_input(text, image_bytes, image_mime)
     if source is None:
-        return RedirectResponse(url="/", status_code=303)
+        return RedirectResponse(url=_month_url(month), status_code=303)
 
     result = extractor.extract(source, today=date.today())
     conn = connect()
     try:
-        repository.create_event(conn, source, result)
+        event_id = repository.create_event(conn, source, result)
+        # 取り込んだ予定がある月を表示。日付が無ければ見ていた月のまま。
+        landed = repository.earliest_dated_month(conn, event_id) or month
     finally:
         conn.close()
-    return RedirectResponse(url="/", status_code=303)
+    return RedirectResponse(url=_month_url(landed), status_code=303)
 
 
 @app.get("/events/{event_id}", response_class=HTMLResponse)

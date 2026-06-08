@@ -102,6 +102,35 @@ def test_update_note(conn: sqlite3.Connection) -> None:
     assert detail.note == "一週間前に準備"
 
 
+def test_home_month_is_earliest_dated_schedule(conn: sqlite3.Connection) -> None:
+    detail = repository.get_event_detail(conn, _seed(conn))
+    assert detail is not None
+    assert detail.home_month == "2026-06"  # 応募締切 6/30 が最古、説明会は日時未定
+
+
+def test_home_month_none_when_all_undated(conn: sqlite3.Connection) -> None:
+    event_id = repository.create_event(
+        conn,
+        ExtractionInput(kind="text", text="△△"),
+        ExtractionResult(
+            event_title="△△",
+            schedules=[ExtractedSchedule(title="締切", raw_date_text="後日発表")],
+        ),
+    )
+    detail = repository.get_event_detail(conn, event_id)
+    assert detail is not None
+    assert detail.home_month is None
+
+
+def test_earliest_dated_month(conn: sqlite3.Connection) -> None:
+    event_id = _seed(conn)
+    assert repository.earliest_dated_month(conn, event_id) == "2026-06"
+
+
+def test_earliest_dated_month_none_for_unknown_event(conn: sqlite3.Connection) -> None:
+    assert repository.earliest_dated_month(conn, 999) is None
+
+
 def test_commit_state_defaults_to_floating(conn: sqlite3.Connection) -> None:
     detail = repository.get_event_detail(conn, _seed(conn))
     assert detail is not None

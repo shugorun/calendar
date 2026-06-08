@@ -79,6 +79,15 @@ def create_event(
     return event_id
 
 
+def earliest_dated_month(conn: sqlite3.Connection, event_id: int) -> str | None:
+    """イベント配下で最も早い日付の月 "YYYY-MM"。日付付き予定が無ければ None。"""
+    row = conn.execute(
+        "SELECT MIN(date) AS d FROM schedules WHERE event_id = ? AND date IS NOT NULL",
+        (event_id,),
+    ).fetchone()
+    return row["d"][:7] if row and row["d"] else None
+
+
 def dated_schedules(conn: sqlite3.Connection) -> list[DatedSchedule]:
     """日付を持つ全予定を、イベント情報込みで返す。"""
     rows = conn.execute(
@@ -142,6 +151,7 @@ class EventDetail:
     has_image: bool
     source_text: str | None
     schedules: list[EditableSchedule]
+    home_month: str | None  # 最初の日付の月 "YYYY-MM"。日付付き予定が無ければ None
 
 
 @dataclass
@@ -183,6 +193,7 @@ def get_event_detail(conn: sqlite3.Connection, event_id: int) -> EventDetail | N
         )
         for row in rows
     ]
+    dated = [s.date for s in schedules if s.date]
     return EventDetail(
         id=ev["id"],
         title=ev["title"],
@@ -192,6 +203,7 @@ def get_event_detail(conn: sqlite3.Connection, event_id: int) -> EventDetail | N
         has_image=bool(ev["has_image"]),
         source_text=ev["source_text"],
         schedules=schedules,
+        home_month=min(dated)[:7] if dated else None,
     )
 
 
