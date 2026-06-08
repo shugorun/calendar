@@ -61,8 +61,8 @@ def create_event(
         conn.execute(
             "INSERT INTO schedules "
             "(event_id, title, kind, is_deadline, date, end_date, time, "
-            "raw_date_text, created_at) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "end_time, raw_date_text, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 event_id,
                 sched.title,
@@ -71,6 +71,7 @@ def create_event(
                 sched.date.isoformat() if sched.date else None,
                 sched.end_date.isoformat() if sched.end_date else None,
                 sched.time.isoformat() if sched.time else None,
+                sched.end_time.isoformat() if sched.end_time else None,
                 sched.raw_date_text,
                 now,
             ),
@@ -138,6 +139,7 @@ class EditableSchedule:
     date: str | None
     end_date: str | None
     time: str | None
+    end_time: str | None
     raw_date_text: str | None
     commit_state: str
 
@@ -157,7 +159,7 @@ class EventDetail:
 
 @dataclass
 class ScheduleFields:
-    """予定の編集で書き換える項目。date/end_date/time は ISO 文字列か None。"""
+    """予定の編集で書き換える項目。date/end_date/time/end_time は ISO 文字列か None。"""
 
     title: str
     kind: str | None
@@ -165,6 +167,7 @@ class ScheduleFields:
     date: str | None
     end_date: str | None
     time: str | None
+    end_time: str | None
 
 
 def get_event_detail(conn: sqlite3.Connection, event_id: int) -> EventDetail | None:
@@ -177,7 +180,7 @@ def get_event_detail(conn: sqlite3.Connection, event_id: int) -> EventDetail | N
     if ev is None:
         return None
     rows = conn.execute(
-        "SELECT id, title, kind, is_deadline, date, end_date, time, "
+        "SELECT id, title, kind, is_deadline, date, end_date, time, end_time, "
         "raw_date_text, commit_state "
         "FROM schedules WHERE event_id = ? ORDER BY date IS NULL, date, id",
         (event_id,),
@@ -191,6 +194,7 @@ def get_event_detail(conn: sqlite3.Connection, event_id: int) -> EventDetail | N
             date=row["date"],
             end_date=row["end_date"],
             time=row["time"],
+            end_time=row["end_time"],
             raw_date_text=row["raw_date_text"],
             commit_state=row["commit_state"],
         )
@@ -254,7 +258,7 @@ def update_schedule(
 ) -> None:
     conn.execute(
         "UPDATE schedules SET title = ?, kind = ?, is_deadline = ?, "
-        "date = ?, end_date = ?, time = ? WHERE id = ?",
+        "date = ?, end_date = ?, time = ?, end_time = ? WHERE id = ?",
         (
             fields.title,
             fields.kind,
@@ -262,6 +266,7 @@ def update_schedule(
             fields.date,
             fields.end_date,
             fields.time,
+            fields.end_time,
             schedule_id,
         ),
     )

@@ -29,6 +29,7 @@ class _SchedulePayload(BaseModel):
     date: str | None = None
     end_date: str | None = None
     time: str | None = None
+    end_time: str | None = None
     raw_date_text: str | None = None
 
 
@@ -54,7 +55,8 @@ def _prompt(today: date) -> str:
         "  - date: YYYY-MM-DD（期間なら開始日）。年が無ければ今日以降で最も近い年。"
         "具体的な日が不明なら null\n"
         "  - end_date: 期間（例: 6/25〜6/28）の終了日 YYYY-MM-DD。単日なら null\n"
-        "  - time: HH:MM。不明なら null\n"
+        "  - time: 開始時刻 HH:MM。不明なら null\n"
+        "  - end_time: 終了時刻 HH:MM（例: 14:00〜15:00 の 15:00）。無ければ null\n"
         "  - raw_date_text: 元の日付表現（例: 7月中 / 後日発表）\n"
         "日付がまったく無い入力なら schedules は空配列にする。"
     )
@@ -89,6 +91,7 @@ def _to_result(payload: _EventPayload) -> ExtractionResult:
                 date=_parse_date(item.date),
                 end_date=_parse_date(item.end_date),
                 time=_parse_time(item.time),
+                end_time=_parse_time(item.end_time),
                 raw_date_text=item.raw_date_text,
             )
             for item in payload.schedules

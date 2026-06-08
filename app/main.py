@@ -205,6 +205,7 @@ def edit_schedule(
     date: str = Form(""),
     end_date: str = Form(""),
     time: str = Form(""),
+    end_time: str = Form(""),
 ) -> RedirectResponse:
     fields = repository.ScheduleFields(
         title=title,
@@ -213,6 +214,7 @@ def edit_schedule(
         date=date or None,
         end_date=end_date or None,
         time=time or None,
+        end_time=end_time or None,
     )
     conn = connect()
     try:

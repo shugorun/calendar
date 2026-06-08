@@ -29,6 +29,7 @@ class ExtractedSchedule:
     date: datetime.date | None = None
     end_date: datetime.date | None = None
     time: datetime.time | None = None
+    end_time: datetime.time | None = None
     raw_date_text: str | None = None
 
 

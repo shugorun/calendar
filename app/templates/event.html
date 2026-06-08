@@ -46,6 +46,7 @@
           <label>日付 <input type="date" name="date" value="{{ s.date or '' }}" /></label>
           <label>終了 <input type="date" name="end_date" value="{{ s.end_date or '' }}" /></label>
           <label>時刻 <input type="time" name="time" value="{{ s.time or '' }}" /></label>
+          <label>終了時刻 <input type="time" name="end_time" value="{{ s.end_time or '' }}" /></label>
           <label>
             <input type="checkbox" name="is_deadline" value="true" {% if s.is_deadline %}checked{% endif %} />
             締切

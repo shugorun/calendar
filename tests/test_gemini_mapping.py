@@ -20,6 +20,7 @@ def test_to_result_parses_dates_times_and_flags() -> None:
                 is_deadline=True,
                 date="2026-06-30",
                 time="14:00",
+                end_time="15:00",
                 raw_date_text="6/30",
             ),
             _SchedulePayload(title="説明会", date=None, raw_date_text="7月中"),
@@ -38,6 +39,7 @@ def test_to_result_parses_dates_times_and_flags() -> None:
     first = result.schedules[0]
     assert first.date == date(2026, 6, 30)
     assert first.time == time(14, 0)
+    assert first.end_time == time(15, 0)  # 同日内の終了時刻を写す
     assert first.is_deadline is True
     assert result.schedules[1].date is None  # 日時未定はそのまま None
     assert result.schedules[2].date is None  # 壊れた日付は None に落とす
