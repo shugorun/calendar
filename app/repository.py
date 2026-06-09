@@ -450,22 +450,6 @@ def add_schedules_from(
     return len(result.schedules)
 
 
-def add_blank_schedule(conn: sqlite3.Connection, event_id: int) -> int | None:
-    """既存イベントに空（タイトル無し・日時未定・浮いている）の予定を1件足す。
-
-    その場でインライン編集する前提。イベントが無ければ None。
-    """
-    exists = conn.execute("SELECT 1 FROM events WHERE id = ?", (event_id,)).fetchone()
-    if exists is None:
-        return None
-    cur = conn.execute(
-        "INSERT INTO schedules (event_id, title, created_at) VALUES (?, '', ?)",
-        (event_id, _now_iso()),
-    )
-    conn.commit()
-    return cur.lastrowid
-
-
 def update_note(conn: sqlite3.Connection, event_id: int, note: str) -> None:
     conn.execute("UPDATE events SET note = ? WHERE id = ?", (note, event_id))
     conn.commit()

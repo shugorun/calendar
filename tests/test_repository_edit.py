@@ -294,23 +294,6 @@ def test_manual_no_date_is_not_approximate(conn: sqlite3.Connection) -> None:
     assert detail.schedules[0].is_approximate is False
 
 
-def test_add_blank_schedule(conn: sqlite3.Connection) -> None:
-    event_id = _seed(conn)
-    new_id = repository.add_blank_schedule(conn, event_id)
-    assert new_id is not None
-    detail = repository.get_event_detail(conn, event_id)
-    assert detail is not None
-    assert len(detail.schedules) == 3  # seed の2件＋空1件
-    blank = next(s for s in detail.schedules if s.id == new_id)
-    assert blank.title == ""
-    assert blank.date is None  # 日時未定で生まれる
-    assert blank.commit_state == "floating"
-
-
-def test_add_blank_schedule_missing_event(conn: sqlite3.Connection) -> None:
-    assert repository.add_blank_schedule(conn, 999) is None
-
-
 def test_add_schedules_from_appends_and_keeps_source(
     conn: sqlite3.Connection,
 ) -> None:

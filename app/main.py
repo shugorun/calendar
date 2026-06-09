@@ -293,19 +293,6 @@ def intake_into_event(
     return {"added": added}
 
 
-@app.post("/api/events/{event_id}/schedules", status_code=status.HTTP_201_CREATED)
-def add_schedule(event_id: int) -> dict[str, int]:
-    """既存イベントに空の予定を1件足す（その場でインライン編集する前提）。"""
-    conn = connect()
-    try:
-        new_id = repository.add_blank_schedule(conn, event_id)
-    finally:
-        conn.close()
-    if new_id is None:
-        raise HTTPException(status_code=404, detail="イベントが見つかりません")
-    return {"id": new_id}
-
-
 class ManualSchedulesBody(BaseModel):
     schedules: list[ManualScheduleBody] = []
 

@@ -40,10 +40,6 @@ export function manualAdd(body: ManualEventInput): Promise<{ month: string }> {
   return postJson<{ month: string }>('/api/manual', body)
 }
 
-export function addSchedule(eventId: number): Promise<{ id: number }> {
-  return postJson<{ id: number }>(`/api/events/${eventId}/schedules`, {})
-}
-
 // 既存イベントに、手で入力した予定（確定状態つき）をまとめて追加する。
 export function addManualSchedules(
   eventId: number,
