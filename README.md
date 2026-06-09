@@ -7,30 +7,42 @@
 
 ## 開発環境
 
-- Python 3.13 / [uv](https://docs.astral.sh/uv/) でプロジェクト専用 venv を管理
-- バックエンド: FastAPI（localhost で起動する小さなローカルサーバー）
+- バックエンド（`app/`）: FastAPI の JSON API。Python 3.13 / [uv](https://docs.astral.sh/uv/) で venv 管理
+- フロント（`web/`）: React 19 + TypeScript + Vite の SPA
 - DB: SQLite（ファイル1つ）
-- フロント: Jinja2 テンプレ＋素の JS（軽量）
-- Lint/Format: Ruff、型: mypy（`strict`）
+- バック: Lint/Format = Ruff、型 = mypy（`strict`）
+- フロント: Lint = ESLint、Format = Prettier、型 = tsc
+- 構成の決定は [docs/adr/0005-react-spa-and-json-api.md](./docs/adr/0005-react-spa-and-json-api.md)
 
 ## セットアップ
 
 ```sh
-uv sync                 # .venv を作成し依存をインストール
+uv sync                 # バックエンド: .venv を作成し依存をインストール
+npm --prefix web install   # フロント: node_modules を作成
 ```
 
-## 起動
+## 起動（dev は 2 プロセス）
 
 ```sh
-uv run uvicorn app.main:app --reload
-# http://127.0.0.1:8000 を開く
+# ターミナル1: API（FastAPI）
+uv run uvicorn app.main:app --port 8000
+
+# ターミナル2: 画面（Vite。/api を 8000 へプロキシ）
+npm --prefix web run dev
+# http://localhost:5173 を開く
 ```
 
 ## 検証（commit 前に緑にする）
 
 ```sh
+# バックエンド
 uv run pytest
 uv run ruff check app tests
 uv run ruff format --check app tests
 uv run mypy app
+
+# フロント
+npm --prefix web run typecheck
+npm --prefix web run lint
+npm --prefix web run format:check
 ```

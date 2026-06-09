@@ -1,0 +1,671 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Claude デザインシステム — コンポーネントギャラリー</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body id="top">
+    <!-- ナビ自体が top-nav コンポーネントのドッグフーディングを兼ねる -->
+    <header class="site-nav">
+      <a class="site-nav__brand" href="#top">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <g stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+              <line x1="12" y1="3" x2="12" y2="21" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="5.5" y1="5.5" x2="18.5" y2="18.5" />
+              <line x1="18.5" y1="5.5" x2="5.5" y2="18.5" />
+            </g>
+          </svg>
+        </span>
+        <span class="site-nav__word">Claude</span>
+        <span class="site-nav__sub">デザインシステム</span>
+      </a>
+      <nav class="site-nav__links" aria-label="セクション">
+        <a href="#colors">カラー</a>
+        <a href="#type">タイポ</a>
+        <a href="#spacing">余白</a>
+        <a href="#radius">角丸</a>
+        <a href="#components">コンポーネント</a>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Hero: hero-band のドッグフーディング -->
+      <section class="hero">
+        <p class="eyebrow">DESIGN SYSTEM · 日本語版</p>
+        <h1 class="t-display-xl">
+          考える相棒のための<br />デザインシステム
+        </h1>
+        <p class="hero__lead t-title-md">
+          DESIGN.md に定義された Claude / Anthropic
+          流のウォーム・エディトリアルな世界観を、トークンとコンポーネントの実物で確認するためのギャラリーです。クリームの地・コーラルのCTA・セリフ見出し・ダークなプロダクト面が核になります。
+        </p>
+        <div class="cluster">
+          <button class="btn btn--primary">Claude を試す</button>
+          <button class="btn btn--secondary">ドキュメント</button>
+          <a class="text-link" href="#components">コンポーネントを見る →</a>
+        </div>
+      </section>
+
+      <!-- ① カラー ------------------------------------------------------ -->
+      <section id="colors" class="section">
+        <header class="section__head">
+          <p class="eyebrow">01 / TOKENS</p>
+          <h2 class="t-display-md">カラーパレット</h2>
+          <p class="section__desc t-body-md">
+            色は「ブランド／サーフェス／テキスト／セマンティック」の4群。コーラルは主要CTAと全面コーラルのカードにだけ使い、ばらまかないのが原則です。
+          </p>
+        </header>
+
+        <h3 class="group-title">ブランド & アクセント</h3>
+        <div class="swatch-grid">
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--primary)"></span>
+            <span class="swatch__name">primary</span>
+            <span class="swatch__hex">#cc785c</span>
+            <span class="swatch__use">コーラル。主要CTA・全面コーラルカード</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--primary-active)"></span>
+            <span class="swatch__name">primary-active</span>
+            <span class="swatch__hex">#a9583e</span>
+            <span class="swatch__use">押下・ホバーで暗くした状態</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--primary-disabled)"></span>
+            <span class="swatch__name">primary-disabled</span>
+            <span class="swatch__hex">#e6dfd8</span>
+            <span class="swatch__use">無効状態（クリーム寄りの淡色）</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--accent-teal)"></span>
+            <span class="swatch__name">accent-teal</span>
+            <span class="swatch__hex">#5db8a6</span>
+            <span class="swatch__use">補助。状態ドット・接続中表示など</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--accent-amber)"></span>
+            <span class="swatch__name">accent-amber</span>
+            <span class="swatch__hex">#e8a55a</span>
+            <span class="swatch__use">補助の暖色。カテゴリバッジなど</span>
+          </article>
+        </div>
+
+        <h3 class="group-title">サーフェス</h3>
+        <div class="swatch-grid">
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--canvas)"></span>
+            <span class="swatch__name">canvas</span>
+            <span class="swatch__hex">#faf9f5</span>
+            <span class="swatch__use">既定の地。温かいクリーム（純白にしない）</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--surface-soft)"></span>
+            <span class="swatch__name">surface-soft</span>
+            <span class="swatch__hex">#f5f0e8</span>
+            <span class="swatch__use">区切り帯・ごく淡い背景</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--surface-card)"></span>
+            <span class="swatch__name">surface-card</span>
+            <span class="swatch__hex">#efe9de</span>
+            <span class="swatch__use">カード地。canvas より一段濃い</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--surface-cream-strong)"></span>
+            <span class="swatch__name">surface-cream-strong</span>
+            <span class="swatch__hex">#e8e0d2</span>
+            <span class="swatch__use">最も濃いクリーム。選択タブ・強調帯</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--surface-dark)"></span>
+            <span class="swatch__name">surface-dark</span>
+            <span class="swatch__hex">#181715</span>
+            <span class="swatch__use">ダーク面。コード/プロダクト/フッタ</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--surface-dark-elevated)"></span>
+            <span class="swatch__name">surface-dark-elevated</span>
+            <span class="swatch__hex">#252320</span>
+            <span class="swatch__use">ダーク上の浮きカード</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--surface-dark-soft)"></span>
+            <span class="swatch__name">surface-dark-soft</span>
+            <span class="swatch__hex">#1f1e1b</span>
+            <span class="swatch__use">ダーク内のコードブロック地</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--hairline)"></span>
+            <span class="swatch__name">hairline</span>
+            <span class="swatch__hex">#e6dfd8</span>
+            <span class="swatch__use">クリーム面の 1px 境界</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--hairline-soft)"></span>
+            <span class="swatch__name">hairline-soft</span>
+            <span class="swatch__hex">#ebe6df</span>
+            <span class="swatch__use">ごく薄い区切り</span>
+          </article>
+        </div>
+
+        <h3 class="group-title">テキスト</h3>
+        <div class="swatch-grid">
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--ink)"></span>
+            <span class="swatch__name">ink</span>
+            <span class="swatch__hex">#141413</span>
+            <span class="swatch__use">見出し・主要テキスト（温かい黒）</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--body-strong)"></span>
+            <span class="swatch__name">body-strong</span>
+            <span class="swatch__hex">#252523</span>
+            <span class="swatch__use">強調本文・リード文</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--body)"></span>
+            <span class="swatch__name">body</span>
+            <span class="swatch__hex">#3d3d3a</span>
+            <span class="swatch__use">既定の本文色</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--muted)"></span>
+            <span class="swatch__name">muted</span>
+            <span class="swatch__hex">#6c6a64</span>
+            <span class="swatch__use">小見出し・補助テキスト</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--muted-soft)"></span>
+            <span class="swatch__name">muted-soft</span>
+            <span class="swatch__hex">#8e8b82</span>
+            <span class="swatch__use">キャプション・細字</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip swatch__chip--bordered" style="background: var(--on-primary)"></span>
+            <span class="swatch__name">on-primary</span>
+            <span class="swatch__hex">#ffffff</span>
+            <span class="swatch__use">コーラル上の文字</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--on-dark)"></span>
+            <span class="swatch__name">on-dark</span>
+            <span class="swatch__hex">#faf9f5</span>
+            <span class="swatch__use">ダーク上の文字（クリーム白）</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--on-dark-soft)"></span>
+            <span class="swatch__name">on-dark-soft</span>
+            <span class="swatch__hex">#a09d96</span>
+            <span class="swatch__use">ダーク上の補助テキスト</span>
+          </article>
+        </div>
+
+        <h3 class="group-title">セマンティック</h3>
+        <div class="swatch-grid">
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--success)"></span>
+            <span class="swatch__name">success</span>
+            <span class="swatch__hex">#5db872</span>
+            <span class="swatch__use">成功・在席ドット</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--warning)"></span>
+            <span class="swatch__name">warning</span>
+            <span class="swatch__hex">#d4a017</span>
+            <span class="swatch__use">警告</span>
+          </article>
+          <article class="swatch">
+            <span class="swatch__chip" style="background: var(--error)"></span>
+            <span class="swatch__name">error</span>
+            <span class="swatch__hex">#c64545</span>
+            <span class="swatch__use">入力エラー</span>
+          </article>
+        </div>
+      </section>
+
+      <!-- ② タイポグラフィ ---------------------------------------------- -->
+      <section id="type" class="section">
+        <header class="section__head">
+          <p class="eyebrow">02 / TOKENS</p>
+          <h2 class="t-display-md">タイポグラフィ</h2>
+          <p class="section__desc t-body-md">
+            見出しはセリフ（EB Garamond ＋ Noto Serif
+            JP）で負のトラッキング、本文は Inter ＋ Noto Sans JP
+            のヒューマニストサンス。コードは JetBrains Mono。display は太字にしません。
+          </p>
+        </header>
+
+        <div class="type-list">
+          <article class="type-row">
+            <p class="type-row__sample t-display-xl">考えるパートナー Thinking partner</p>
+            <p class="type-row__meta">display-xl · 64 / 400 / 1.05 / -1.5px · セリフ</p>
+          </article>
+          <article class="type-row">
+            <p class="type-row__sample t-display-lg">セクション見出し Section</p>
+            <p class="type-row__meta">display-lg · 48 / 400 / 1.1 / -1px · セリフ</p>
+          </article>
+          <article class="type-row">
+            <p class="type-row__sample t-display-md">サブセクション Subsection</p>
+            <p class="type-row__meta">display-md · 36 / 400 / 1.15 / -0.5px · セリフ</p>
+          </article>
+          <article class="type-row">
+            <p class="type-row__sample t-display-sm">料金プラン名 Pricing</p>
+            <p class="type-row__meta">display-sm · 28 / 400 / 1.2 / -0.3px · セリフ</p>
+          </article>
+          <article class="type-row">
+            <p class="type-row__sample t-title-lg">タイトル大 Title large</p>
+            <p class="type-row__meta">title-lg · 22 / 500 / 1.3 · サンス</p>
+          </article>
+          <article class="type-row">
+            <p class="type-row__sample t-title-md">カード見出し Title medium</p>
+            <p class="type-row__meta">title-md · 18 / 500 / 1.4 · サンス</p>
+          </article>
+          <article class="type-row">
+            <p class="type-row__sample t-title-sm">小タイトル Title small</p>
+            <p class="type-row__meta">title-sm · 16 / 500 / 1.4 · サンス</p>
+          </article>
+          <article class="type-row">
+            <p class="type-row__sample t-body-md">
+              本文。スクショやテキストから日付を抽出して、まだ確定していない予定として並べます。The default running text.
+            </p>
+            <p class="type-row__meta">body-md · 16 / 400 / 1.55 · サンス</p>
+          </article>
+          <article class="type-row">
+            <p class="type-row__sample t-body-sm">
+              小さめ本文。フッタや注記に使います。Footer body and fine print.
+            </p>
+            <p class="type-row__meta">body-sm · 14 / 400 / 1.55 · サンス</p>
+          </article>
+          <article class="type-row">
+            <p class="type-row__sample t-caption">キャプション Caption</p>
+            <p class="type-row__meta">caption · 13 / 500 / 1.4 · サンス</p>
+          </article>
+          <article class="type-row">
+            <p class="type-row__sample t-caption-uppercase">NEW · ベータ</p>
+            <p class="type-row__meta">caption-uppercase · 12 / 500 / 1.4 / 1.5px</p>
+          </article>
+          <article class="type-row">
+            <p class="type-row__sample t-code">def extract(text): return parse(text)</p>
+            <p class="type-row__meta">code · 14 / 400 / 1.6 · JetBrains Mono</p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ③ 余白 -------------------------------------------------------- -->
+      <section id="spacing" class="section">
+        <header class="section__head">
+          <p class="eyebrow">03 / TOKENS</p>
+          <h2 class="t-display-md">余白スケール</h2>
+          <p class="section__desc t-body-md">
+            ベースは 4px。バンド間は section（96px）、カード内は xl（32px）が基準のリズムです。
+          </p>
+        </header>
+        <div class="scale-list">
+          <div class="scale-row">
+            <span class="scale-row__bar" style="width: 4px"></span>
+            <span class="scale-row__meta">xxs · 4px</span>
+          </div>
+          <div class="scale-row">
+            <span class="scale-row__bar" style="width: 8px"></span>
+            <span class="scale-row__meta">xs · 8px</span>
+          </div>
+          <div class="scale-row">
+            <span class="scale-row__bar" style="width: 12px"></span>
+            <span class="scale-row__meta">sm · 12px</span>
+          </div>
+          <div class="scale-row">
+            <span class="scale-row__bar" style="width: 16px"></span>
+            <span class="scale-row__meta">md · 16px</span>
+          </div>
+          <div class="scale-row">
+            <span class="scale-row__bar" style="width: 24px"></span>
+            <span class="scale-row__meta">lg · 24px</span>
+          </div>
+          <div class="scale-row">
+            <span class="scale-row__bar" style="width: 32px"></span>
+            <span class="scale-row__meta">xl · 32px</span>
+          </div>
+          <div class="scale-row">
+            <span class="scale-row__bar" style="width: 48px"></span>
+            <span class="scale-row__meta">xxl · 48px</span>
+          </div>
+          <div class="scale-row">
+            <span class="scale-row__bar" style="width: 96px"></span>
+            <span class="scale-row__meta">section · 96px</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ④ 角丸 -------------------------------------------------------- -->
+      <section id="radius" class="section">
+        <header class="section__head">
+          <p class="eyebrow">04 / TOKENS</p>
+          <h2 class="t-display-md">角丸スケール</h2>
+          <p class="section__desc t-body-md">
+            ボタン・入力は md(8px)、カードは lg(12px)、ヒーローの器は xl(16px)、バッジは pill。階層的に使い分けます。
+          </p>
+        </header>
+        <div class="radius-grid">
+          <div class="radius-item">
+            <span class="radius-item__box" style="border-radius: 4px"></span>
+            <span class="radius-item__meta">xs · 4px</span>
+          </div>
+          <div class="radius-item">
+            <span class="radius-item__box" style="border-radius: 6px"></span>
+            <span class="radius-item__meta">sm · 6px</span>
+          </div>
+          <div class="radius-item">
+            <span class="radius-item__box" style="border-radius: 8px"></span>
+            <span class="radius-item__meta">md · 8px</span>
+          </div>
+          <div class="radius-item">
+            <span class="radius-item__box" style="border-radius: 12px"></span>
+            <span class="radius-item__meta">lg · 12px</span>
+          </div>
+          <div class="radius-item">
+            <span class="radius-item__box" style="border-radius: 16px"></span>
+            <span class="radius-item__meta">xl · 16px</span>
+          </div>
+          <div class="radius-item">
+            <span class="radius-item__box" style="border-radius: 9999px"></span>
+            <span class="radius-item__meta">pill · 9999px</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑤ コンポーネント --------------------------------------------- -->
+      <section id="components" class="section">
+        <header class="section__head">
+          <p class="eyebrow">05 / COMPONENTS</p>
+          <h2 class="t-display-md">コンポーネント</h2>
+          <p class="section__desc t-body-md">
+            DESIGN.md のコンポーネントを実物で。クリーム面とダーク面が交互に並ぶのがこのシステムのペーシングです。
+          </p>
+        </header>
+
+        <h3 class="group-title">ボタン</h3>
+        <div class="specs">
+          <div class="spec">
+            <p class="spec__label">button-primary</p>
+            <div class="spec__demo"><button class="btn btn--primary">Claude を試す</button></div>
+            <p class="spec__desc">主要CTA。コーラル地に白文字。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">button-primary-active</p>
+            <div class="spec__demo"><button class="btn btn--primary is-active">押下中</button></div>
+            <p class="spec__desc">押下時は primary-active に暗転。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">button-primary-disabled</p>
+            <div class="spec__demo"><button class="btn btn--primary" disabled>無効</button></div>
+            <p class="spec__desc">無効状態。淡色＋muted 文字。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">button-secondary</p>
+            <div class="spec__demo"><button class="btn btn--secondary">ドキュメント</button></div>
+            <p class="spec__desc">クリーム地＋ヘアライン枠。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">button-text-link</p>
+            <div class="spec__demo"><button class="btn btn--text">サインイン</button></div>
+            <p class="spec__desc">背景なしのテキストボタン。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">button-icon-circular</p>
+            <div class="spec__demo">
+              <button class="btn-icon" aria-label="次へ">›</button>
+            </div>
+            <p class="spec__desc">36px の円形アイコンボタン。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">text-link</p>
+            <div class="spec__demo">
+              <p class="t-body-md">詳しくは<a class="text-link" href="#components">こちらの説明</a>をどうぞ。</p>
+            </div>
+            <p class="spec__desc">コーラルのインラインリンク。</p>
+          </div>
+        </div>
+
+        <h3 class="group-title">バッジ / タブ</h3>
+        <div class="specs">
+          <div class="spec">
+            <p class="spec__label">badge-pill</p>
+            <div class="spec__demo"><span class="badge badge--pill">カテゴリ</span></div>
+            <p class="spec__desc">カテゴリタグの淡色ピル。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">badge-coral</p>
+            <div class="spec__demo"><span class="badge badge--coral">NEW</span></div>
+            <p class="spec__desc">「NEW / BETA」のコーラルバッジ。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">category-tab</p>
+            <div class="spec__demo">
+              <div class="cluster">
+                <button class="tab tab--active">すべて</button>
+                <button class="tab">開発</button>
+                <button class="tab">研究</button>
+              </div>
+            </div>
+            <p class="spec__desc">サブナビのフィルタタブ（左=選択）。</p>
+          </div>
+        </div>
+
+        <h3 class="group-title">入力・フォーム</h3>
+        <div class="specs">
+          <div class="spec">
+            <p class="spec__label">text-input</p>
+            <div class="spec__demo">
+              <input class="input" type="text" placeholder="メールアドレス" />
+            </div>
+            <p class="spec__desc">標準入力。ヘアライン枠＋角丸 md。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">text-input-focused</p>
+            <div class="spec__demo">
+              <input class="input is-focused" type="text" value="入力中…" />
+            </div>
+            <p class="spec__desc">フォーカス時。枠がコーラル＋外側リング。</p>
+          </div>
+        </div>
+
+        <h3 class="group-title">カード（クリーム面）</h3>
+        <div class="specs specs--cards">
+          <div class="spec">
+            <p class="spec__label">feature-card</p>
+            <div class="spec__demo">
+              <article class="card card--feature">
+                <span class="card__icon" aria-hidden="true">◇</span>
+                <h4 class="t-title-md">日付を自動で抽出</h4>
+                <p class="t-body-md">スクショやテキストを貼るだけ。AIが締切や日程を拾います。</p>
+              </article>
+            </div>
+            <p class="spec__desc">3列グリッドの説明カード。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">model-comparison-card</p>
+            <div class="spec__demo">
+              <article class="card card--model">
+                <h4 class="t-display-sm">Opus</h4>
+                <p class="t-body-md">最も賢く、難しい課題向け。</p>
+                <a class="text-link" href="#components">詳しく →</a>
+              </article>
+            </div>
+            <p class="spec__desc">モデル比較カード（価格名はセリフ）。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">pricing-tier-card</p>
+            <div class="spec__demo">
+              <article class="card card--pricing">
+                <p class="t-title-lg">Pro</p>
+                <p class="t-display-sm">¥3,000<span class="price-unit">/月</span></p>
+                <ul class="check-list t-body-md">
+                  <li>無制限の取り込み</li>
+                  <li>優先サポート</li>
+                </ul>
+                <button class="btn btn--primary">登録する</button>
+              </article>
+            </div>
+            <p class="spec__desc">標準の料金カード。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">connector-tile</p>
+            <div class="spec__demo">
+              <article class="card card--connector">
+                <span class="card__icon" aria-hidden="true">◷</span>
+                <h4 class="t-title-sm">Google カレンダー</h4>
+                <p class="t-body-sm">確定予定を書き出す。</p>
+              </article>
+            </div>
+            <p class="spec__desc">連携サービスのタイル。</p>
+          </div>
+        </div>
+
+        <h3 class="group-title">全面コーラル / コーラルCTA帯</h3>
+        <div class="specs specs--wide">
+          <div class="spec">
+            <p class="spec__label">callout-card-coral</p>
+            <div class="spec__demo">
+              <article class="card card--callout">
+                <h3 class="t-display-sm">今日から、忘れない。</h3>
+                <p class="t-body-md">未確定の予定を拾って、確定までを一望に。</p>
+                <button class="btn btn--on-coral">無料で始める</button>
+              </article>
+            </div>
+            <p class="spec__desc">全面コーラル。中のCTAはクリーム反転。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">cta-band-coral</p>
+            <div class="spec__demo">
+              <article class="cta-band cta-band--coral">
+                <h3 class="t-display-sm">Claude を試す</h3>
+                <p class="t-body-md">プレフッタの大型CTA帯。</p>
+                <button class="btn btn--on-coral">始める</button>
+              </article>
+            </div>
+            <p class="spec__desc">プレフッタのコーラル帯。</p>
+          </div>
+        </div>
+
+        <h3 class="group-title">ダーク面 / プロダクト</h3>
+        <div class="specs specs--wide">
+          <div class="spec">
+            <p class="spec__label">code-window-card</p>
+            <div class="spec__demo">
+              <article class="code-window">
+                <div class="code-window__bar">
+                  <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                  <span class="code-window__file">extract.py</span>
+                </div>
+                <pre class="code-window__code t-code"><span class="ln">1</span><span class="tok-com"># 予定を抽出する</span>
+<span class="ln">2</span><span class="tok-kw">def</span> <span class="tok-fn">extract</span>(text):
+<span class="ln">3</span>    schedules = <span class="tok-fn">parse</span>(text)
+<span class="ln">4</span>    <span class="tok-kw">return</span> [s <span class="tok-kw">for</span> s <span class="tok-kw">in</span> schedules <span class="tok-kw">if</span> s.date]</pre>
+              </article>
+            </div>
+            <p class="spec__desc">行番号＋擬似シンタックスのコード窓。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">product-mockup-card-dark</p>
+            <div class="spec__demo">
+              <article class="card card--mockup">
+                <p class="mockup__label">AGENT</p>
+                <div class="mockup__row"><span class="status-dot"></span>カレンダーを確認中…</div>
+                <div class="mockup__row mockup__row--soft">3件の締切が見つかりました</div>
+                <button class="btn btn--on-dark">続ける</button>
+              </article>
+            </div>
+            <p class="spec__desc">プロダクト面（ダーク）。button-secondary-on-dark を内包。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">pricing-tier-card-featured</p>
+            <div class="spec__demo">
+              <article class="card card--pricing card--pricing-featured">
+                <p class="t-title-lg">Team</p>
+                <p class="t-display-sm">¥6,000<span class="price-unit">/月</span></p>
+                <ul class="check-list t-body-md">
+                  <li>チーム共有</li>
+                  <li>管理機能</li>
+                </ul>
+                <button class="btn btn--on-coral">問い合わせ</button>
+              </article>
+            </div>
+            <p class="spec__desc">注目プランはダーク反転で示す。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">cookie-consent-card</p>
+            <div class="spec__demo">
+              <article class="cookie-card">
+                <p class="t-body-sm">Cookie を使用します。</p>
+                <div class="cluster">
+                  <button class="btn btn--on-dark">同意</button>
+                  <button class="btn btn--text-on-dark">設定</button>
+                </div>
+              </article>
+            </div>
+            <p class="spec__desc">右下に浮くダークの同意バナー。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">cta-band-dark</p>
+            <div class="spec__demo">
+              <article class="cta-band cta-band--dark">
+                <h3 class="t-display-sm">開発者向けに、もっと。</h3>
+                <p class="t-body-md">コード窓と対で使うダークCTA帯。</p>
+                <button class="btn btn--on-dark">ドキュメント</button>
+              </article>
+            </div>
+            <p class="spec__desc">開発者ページのダークCTA帯。</p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- footer コンポーネントのドッグフーディング（ダーク・反転しない） -->
+    <footer class="site-footer">
+      <div class="site-footer__brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <g stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+              <line x1="12" y1="3" x2="12" y2="21" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="5.5" y1="5.5" x2="18.5" y2="18.5" />
+              <line x1="18.5" y1="5.5" x2="5.5" y2="18.5" />
+            </g>
+          </svg>
+        </span>
+        Anthropic
+      </div>
+      <nav class="site-footer__cols" aria-label="フッタ">
+        <div>
+          <p class="site-footer__head">Product</p>
+          <a href="#components">Claude</a><a href="#components">API</a>
+        </div>
+        <div>
+          <p class="site-footer__head">Company</p>
+          <a href="#components">About</a><a href="#components">Careers</a>
+        </div>
+        <div>
+          <p class="site-footer__head">Resources</p>
+          <a href="#components">Docs</a><a href="#components">Pricing</a>
+        </div>
+        <div>
+          <p class="site-footer__head">Legal</p>
+          <a href="#components">Privacy</a><a href="#components">Terms</a>
+        </div>
+      </nav>
+      <p class="site-footer__note t-body-sm">
+        ブランドマークは商標回避のための placeholder です（実ロゴではありません）。
+      </p>
+    </footer>
+  </body>
+</html>

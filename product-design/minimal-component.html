@@ -1,0 +1,580 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>未確定カレンダー — 最小コンポーネント網羅</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&family=Noto+Serif+JP:wght@400;500;600&family=Inter:wght@400;500;600&family=Noto+Sans+JP:wght@400;500;700&family=JetBrains+Mono&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="minimal-component.css" />
+  </head>
+  <body>
+    <header class="catalog-head">
+      <p class="eyebrow">PRODUCT DESIGN · 最小コンポーネント</p>
+      <h1 class="catalog-title">Floaty の部品カタログ</h1>
+      <p class="catalog-lead">
+        実アプリ（web/）のクラス名に 1:1
+        で対応した、製品の最小コンポーネントを状態込みで網羅。デザインは DESIGN.md
+        のトークンで着色。ここで詰めた CSS をそのまま web/ に移植できます。
+      </p>
+      <nav class="catalog-nav" aria-label="セクション">
+        <a href="#base">基礎</a>
+        <a href="#calendar">カレンダー画面</a>
+        <a href="#event">イベント詳細画面</a>
+      </nav>
+    </header>
+
+    <main class="catalog">
+      <!-- ====================================================== 基礎 -->
+      <section id="base" class="group">
+        <h2 class="group-title">基礎部品（共通）</h2>
+
+        <h3 class="sub-title">ボタン</h3>
+        <p class="sub-note">
+          既定は副次（クリーム＋枠）。主要操作だけ <code>.primary</code>（コーラル）、破壊操作は
+          <code>.danger</code>。<em class="申し送り">申し送り: web/ の「取り込む / まとめて確定 / 確定にする」ボタンに <code>class="primary"</code> を付ける。</em>
+        </p>
+        <div class="specs">
+          <div class="spec">
+            <p class="spec__label">button（既定＝副次）</p>
+            <div class="spec__demo"><button>保存</button></div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">button.primary</p>
+            <div class="spec__demo"><button class="primary">取り込む</button></div>
+            <p class="spec__desc">主要CTA。コーラル地に白文字。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">button.danger</p>
+            <div class="spec__demo"><button class="danger">削除</button></div>
+            <p class="spec__desc">破壊的操作。輪郭だけ赤。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">button:disabled</p>
+            <div class="spec__demo"><button disabled>取り込む</button></div>
+          </div>
+        </div>
+
+        <h3 class="sub-title">入力</h3>
+        <div class="specs">
+          <div class="spec">
+            <p class="spec__label">input[type=text]</p>
+            <div class="spec__demo"><input type="text" placeholder="イベント名" /></div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">input:focus</p>
+            <div class="spec__demo"><input type="text" value="入力中…" class="is-focused" /></div>
+            <p class="spec__desc">フォーカス時はコーラル枠＋リング。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">input[type=date]</p>
+            <div class="spec__demo"><input type="date" value="2026-06-11" /></div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">input[type=checkbox]</p>
+            <div class="spec__demo">
+              <label class="check"><input type="checkbox" checked /> 締切</label>
+            </div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">textarea</p>
+            <div class="spec__demo"><textarea rows="3" placeholder="補足メモを書く"></textarea></div>
+          </div>
+        </div>
+
+        <h3 class="sub-title">状態表示</h3>
+        <div class="specs">
+          <div class="spec">
+            <p class="spec__label">.empty</p>
+            <div class="spec__demo"><p class="empty">予定はありません（日付を入れると追えます）。</p></div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">[role=status]（読込）</p>
+            <div class="spec__demo"><p role="status">読み込み中…</p></div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">[role=alert]（エラー）</p>
+            <div class="spec__demo"><p role="alert">読み込みに失敗しました</p></div>
+          </div>
+        </div>
+
+        <h3 class="sub-title">サイト枠（Layout）</h3>
+        <div class="specs specs--wide">
+          <div class="spec">
+            <p class="spec__label">.topbar / .brand</p>
+            <div class="spec__demo spec__demo--flush">
+              <header class="topbar">
+                <a class="brand" href="#">
+                  <span class="brand-mark" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" width="16" height="16">
+                      <g stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+                        <line x1="12" y1="3" x2="12" y2="21" />
+                        <line x1="3" y1="12" x2="21" y2="12" />
+                        <line x1="5.5" y1="5.5" x2="18.5" y2="18.5" />
+                        <line x1="18.5" y1="5.5" x2="5.5" y2="18.5" />
+                      </g>
+                    </svg>
+                  </span>
+                  Floaty
+                </a>
+              </header>
+            </div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.site-footer / .footer-note</p>
+            <div class="spec__demo spec__demo--flush">
+              <footer class="site-footer">
+                <p class="footer-note">
+                  スクショ・テキストから、まだ確定していない予定を拾って忘れないために。ローカルで動く個人用カレンダー。
+                </p>
+              </footer>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================ カレンダー画面 -->
+      <section id="calendar" class="group">
+        <h2 class="group-title">カレンダー画面の部品</h2>
+
+        <h3 class="sub-title">見出し・取り込み</h3>
+        <div class="specs specs--wide">
+          <div class="spec">
+            <p class="spec__label">h1 / .lede</p>
+            <div class="spec__demo spec__demo--stack">
+              <h1>未確定予定カレンダー</h1>
+              <p class="lede">
+                スクショやテキストを貼るだけ。AIが日付を拾って、まだ確定していない予定としてカレンダーに並べます。
+              </p>
+            </div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.intake（取り込み・空）</p>
+            <div class="spec__demo spec__demo--stack">
+              <form class="intake" aria-label="予定の取り込み">
+                <div class="intake-row">
+                  <label class="intake-add" aria-label="画像を追加">
+                    +
+                    <input type="file" accept="image/*" hidden />
+                  </label>
+                  <textarea rows="1" aria-label="取り込むテキスト" placeholder="予定を貼り付け、または画像を追加…"></textarea>
+                  <button type="submit" class="intake-submit" aria-label="取り込む">↑</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.intake（画像を添付）</p>
+            <div class="spec__demo spec__demo--stack">
+              <form class="intake" aria-label="予定の取り込み">
+                <div class="intake-thumbs">
+                  <div class="intake-thumb">
+                    <img class="preview" alt="取り込む画像のプレビュー" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Crect width='72' height='72' fill='%23181715'/%3E%3C/svg%3E" />
+                    <button type="button" class="intake-thumb-x" aria-label="この画像を外す">×</button>
+                  </div>
+                </div>
+                <div class="intake-row">
+                  <label class="intake-add" aria-label="画像を追加">
+                    +
+                    <input type="file" accept="image/*" hidden />
+                  </label>
+                  <textarea rows="1" aria-label="取り込むテキスト" placeholder="予定を貼り付け、または画像を追加…"></textarea>
+                  <button type="submit" class="intake-submit" aria-label="取り込む">↑</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="sub-title">月ナビ・カレンダー表</h3>
+        <div class="specs specs--wide">
+          <div class="spec">
+            <p class="spec__label">.cal-nav</p>
+            <div class="spec__demo spec__demo--flush">
+              <nav class="cal-nav" aria-label="月の移動">
+                <button type="button">‹ 前の月</button>
+                <h2>2026年6月</h2>
+                <button type="button">次の月 ›</button>
+              </nav>
+            </div>
+          </div>
+        </div>
+        <div class="specs specs--full">
+          <div class="spec">
+            <p class="spec__label">.cal-grid（表）— 当月・他月・今日・チップを含む例</p>
+            <div class="spec__demo spec__demo--flush">
+              <table class="cal-grid">
+                <caption>2026年6月の予定</caption>
+                <thead>
+                  <tr>
+                    <th class="cal-weekday" scope="col">日</th>
+                    <th class="cal-weekday" scope="col">月</th>
+                    <th class="cal-weekday" scope="col">火</th>
+                    <th class="cal-weekday" scope="col">水</th>
+                    <th class="cal-weekday" scope="col">木</th>
+                    <th class="cal-weekday" scope="col">金</th>
+                    <th class="cal-weekday" scope="col">土</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td class="cal-day out"><time class="cal-daynum">31</time></td>
+                    <td class="cal-day"><time class="cal-daynum">1</time></td>
+                    <td class="cal-day"><time class="cal-daynum">2</time></td>
+                    <td class="cal-day"><time class="cal-daynum">3</time></td>
+                    <td class="cal-day"><time class="cal-daynum">4</time></td>
+                    <td class="cal-day"><time class="cal-daynum">5</time></td>
+                    <td class="cal-day"><time class="cal-daynum">6</time></td>
+                  </tr>
+                  <tr>
+                    <td class="cal-day"><time class="cal-daynum">7</time></td>
+                    <td class="cal-day today">
+                      <time class="cal-daynum" aria-current="date">8</time>
+                    </td>
+                    <td class="cal-day"><time class="cal-daynum">9</time></td>
+                    <td class="cal-day"><time class="cal-daynum">10</time></td>
+                    <td class="cal-day">
+                      <time class="cal-daynum">11</time>
+                      <ul class="cal-chips">
+                        <li class="chip committed">
+                          <a href="#"><span class="chip-time">14:00 </span><span class="chip-name">口頭発表</span></a>
+                        </li>
+                      </ul>
+                    </td>
+                    <td class="cal-day"><time class="cal-daynum">12</time></td>
+                    <td class="cal-day"><time class="cal-daynum">13</time></td>
+                  </tr>
+                  <tr>
+                    <td class="cal-day"><time class="cal-daynum">14</time></td>
+                    <td class="cal-day"><time class="cal-daynum">15</time></td>
+                    <td class="cal-day"><time class="cal-daynum">16</time></td>
+                    <td class="cal-day"><time class="cal-daynum">17</time></td>
+                    <td class="cal-day"><time class="cal-daynum">18</time></td>
+                    <td class="cal-day"><time class="cal-daynum">19</time></td>
+                    <td class="cal-day"><time class="cal-daynum">20</time></td>
+                  </tr>
+                  <tr>
+                    <td class="cal-day"><time class="cal-daynum">21</time></td>
+                    <td class="cal-day"><time class="cal-daynum">22</time></td>
+                    <td class="cal-day"><time class="cal-daynum">23</time></td>
+                    <td class="cal-day"><time class="cal-daynum">24</time></td>
+                    <td class="cal-day">
+                      <time class="cal-daynum">25</time>
+                      <ul class="cal-chips">
+                        <li class="chip floating"><a href="#"><span class="chip-name">本会議</span></a></li>
+                      </ul>
+                    </td>
+                    <td class="cal-day"><time class="cal-daynum">26</time></td>
+                    <td class="cal-day"><time class="cal-daynum">27</time></td>
+                  </tr>
+                  <tr>
+                    <td class="cal-day"><time class="cal-daynum">28</time></td>
+                    <td class="cal-day"><time class="cal-daynum">29</time></td>
+                    <td class="cal-day">
+                      <time class="cal-daynum">30</time>
+                      <ul class="cal-chips">
+                        <li class="chip floating deadline"><a href="#"><span class="chip-name">⚑論文投稿締切</span></a></li>
+                      </ul>
+                    </td>
+                    <td class="cal-day out"><time class="cal-daynum">1</time></td>
+                    <td class="cal-day out"><time class="cal-daynum">2</time></td>
+                    <td class="cal-day out"><time class="cal-daynum">3</time></td>
+                    <td class="cal-day out"><time class="cal-daynum">4</time></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="sub-title">日セル（.cal-day）の状態</h3>
+        <div class="specs">
+          <div class="spec">
+            <p class="spec__label">.cal-day（当月・空）</p>
+            <div class="spec__demo"><table class="cal-grid mini"><tbody><tr><td class="cal-day"><time class="cal-daynum">5</time></td></tr></tbody></table></div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.cal-day.out（他月）</p>
+            <div class="spec__demo"><table class="cal-grid mini"><tbody><tr><td class="cal-day out"><time class="cal-daynum">31</time></td></tr></tbody></table></div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.cal-day.today（今日）</p>
+            <div class="spec__demo"><table class="cal-grid mini"><tbody><tr><td class="cal-day today"><time class="cal-daynum" aria-current="date">8</time></td></tr></tbody></table></div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.cal-day（溢れ）＋ .cal-more →ポップオーバー</p>
+            <div class="spec__demo spec__demo--canvas">
+              <table class="cal-grid mini"><tbody><tr>
+                <td class="cal-day">
+                  <time class="cal-daynum">11</time>
+                  <ul class="cal-chips">
+                    <li class="chip committed"><a href="#"><span class="chip-time">14:00 </span><span class="chip-name">口頭発表</span></a></li>
+                    <li class="chip floating"><a href="#"><span class="chip-name">チュートリアル</span></a></li>
+                    <li class="chip floating deadline"><a href="#"><span class="chip-name">⚑論文投稿締切</span></a></li>
+                    <li class="cal-more">
+                      <button type="button" popovertarget="day-pop" style="anchor-name: --daypop">＋2件</button>
+                    </li>
+                  </ul>
+                  <div class="day-popover" id="day-pop" popover>
+                    <div class="day-popover__head">
+                      <span class="day-popover__date">6月11日（木）</span>
+                      <button type="button" class="day-popover__x" popovertarget="day-pop" popovertargetaction="hide" aria-label="閉じる">×</button>
+                    </div>
+                    <ul class="cal-chips">
+                      <li class="chip committed"><a href="#"><span class="chip-time">14:00 </span><span class="chip-name">口頭発表</span></a></li>
+                      <li class="chip floating"><a href="#"><span class="chip-name">チュートリアル</span></a></li>
+                      <li class="chip floating deadline"><a href="#"><span class="chip-name">⚑論文投稿締切</span></a></li>
+                      <li class="chip floating"><a href="#"><span class="chip-name">ポスターセッション</span></a></li>
+                      <li class="chip committed"><a href="#"><span class="chip-time">17:00 </span><span class="chip-name">懇親会</span></a></li>
+                    </ul>
+                  </div>
+                </td>
+              </tr></tbody></table>
+            </div>
+            <p class="spec__desc">先頭3件＋「＋N件」。押すとその日の全予定をポップオーバー表示（ネイティブ Popover API・JS不要、Esc/外クリックで閉じる）。</p>
+          </div>
+        </div>
+
+        <h3 class="sub-title">予定チップ（.chip）の状態</h3>
+        <div class="specs">
+          <div class="spec">
+            <p class="spec__label">.chip.floating</p>
+            <div class="spec__demo spec__demo--canvas"><ul class="cal-chips"><li class="chip floating"><a href="#"><span class="chip-name">チュートリアル</span></a></li></ul></div>
+            <p class="spec__desc">浮いている。控えめなクリーム。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.chip.committed</p>
+            <div class="spec__demo spec__demo--canvas"><ul class="cal-chips"><li class="chip committed"><a href="#"><span class="chip-name">チュートリアル</span></a></li></ul></div>
+            <p class="spec__desc">確定。コーラルで塗る。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.chip（時刻あり）</p>
+            <div class="spec__demo spec__demo--canvas"><ul class="cal-chips"><li class="chip committed"><a href="#"><span class="chip-time">14:00 </span><span class="chip-name">口頭発表</span></a></li></ul></div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.chip.deadline（締切）</p>
+            <div class="spec__demo spec__demo--canvas"><ul class="cal-chips"><li class="chip floating deadline"><a href="#"><span class="chip-name">⚑論文投稿締切</span></a></li></ul></div>
+            <p class="spec__desc">締切。左に赤アクセント＋⚑。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.chip.approximate（目安）</p>
+            <div class="spec__demo spec__demo--canvas"><ul class="cal-chips"><li class="chip floating approximate"><a href="#"><span class="chip-name">参加登録 ~</span></a></li></ul></div>
+            <p class="spec__desc">日付が目安。破線で「確定でない」を示す。</p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.chip（長い名前＝セル幅で消える）</p>
+            <div class="spec__demo spec__demo--canvas">
+              <table class="cal-grid mini"><tbody><tr>
+                <td class="cal-day">
+                  <time class="cal-daynum">11</time>
+                  <ul class="cal-chips">
+                    <li class="chip committed"><a href="#"><span class="chip-time">14:00 </span><span class="chip-name">PACLIC 2026 国際会議 口頭発表セッション</span></a></li>
+                  </ul>
+                </td>
+              </tr></tbody></table>
+            </div>
+            <p class="spec__desc">開始時刻は残し、長い名前はセル幅で nowrap で消える。</p>
+          </div>
+        </div>
+
+        <h3 class="sub-title">日時未定（.undated）</h3>
+        <div class="specs specs--wide">
+          <div class="spec">
+            <p class="spec__label">.undated</p>
+            <div class="spec__demo spec__demo--stack">
+              <section class="undated">
+                <h2>日時未定</h2>
+                <ul>
+                  <li>
+                    <a class="what" href="#">採否通知</a>
+                    <span class="ev">PACLIC 2026 国際会議</span>
+                    <span class="raw">（7月中）</span>
+                  </li>
+                  <li>
+                    <a class="what" href="#">カメラレディ締切</a>
+                    <span class="ev">PACLIC 2026 国際会議</span>
+                    <span class="raw">（後日発表）</span>
+                  </li>
+                </ul>
+              </section>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== イベント詳細画面 -->
+      <section id="event" class="group">
+        <h2 class="group-title">イベント詳細画面の部品</h2>
+
+        <h3 class="sub-title">ヘッダ・タイトル編集</h3>
+        <div class="specs specs--wide">
+          <div class="spec">
+            <p class="spec__label">.back-link / h1</p>
+            <div class="spec__demo spec__demo--stack">
+              <nav aria-label="ページ移動"><a class="back-link" href="#">← カレンダーへ戻る</a></nav>
+              <h1 class="event-title">PACLIC 2026 国際会議</h1>
+            </div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.title-form</p>
+            <div class="spec__demo spec__demo--stack">
+              <form class="title-form" aria-label="イベント名の変更">
+                <label for="d-title">イベント名</label>
+                <input id="d-title" value="PACLIC 2026 国際会議" />
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="sub-title">一括確定バー（.commit-bar）</h3>
+        <div class="specs specs--wide">
+          <div class="spec">
+            <p class="spec__label">.commit-bar.floating（0件確定）</p>
+            <div class="spec__demo spec__demo--stack">
+              <div class="commit-bar floating">
+                <span class="commit-label">確定 0 / 3</span>
+                <button type="button" class="primary">予定をまとめて確定</button>
+              </div>
+            </div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.commit-bar.floating（一部確定）</p>
+            <div class="spec__demo spec__demo--stack">
+              <div class="commit-bar floating">
+                <span class="commit-label">確定 2 / 3</span>
+                <button type="button" class="primary">予定をまとめて確定</button>
+              </div>
+            </div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.commit-bar.committed（全確定）</p>
+            <div class="spec__demo spec__demo--stack">
+              <div class="commit-bar committed">
+                <span class="commit-label">確定 3 / 3</span>
+                <button type="button">予定の確定を取り消す</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="sub-title">予定エディタ（.sched）</h3>
+        <div class="specs specs--full">
+          <div class="spec">
+            <p class="spec__label">.sched.floating（浮いている・全項目）</p>
+            <div class="spec__demo spec__demo--stack">
+              <ul class="sched-list">
+                <li class="sched floating">
+                  <form class="sched-form" aria-label="予定の編集">
+                    <input class="sched-title" value="口頭発表" aria-label="予定名" />
+                    <label>日付 <input type="date" value="2026-06-11" /></label>
+                    <label>終了 <input type="date" /></label>
+                    <label>開始時刻 <input type="text" value="14:00" placeholder="14:00" /></label>
+                    <label>終了時刻 <input type="text" value="15:00" placeholder="15:00" /></label>
+                    <span class="sched-flags">
+                      <label class="check"><input type="checkbox" /> 締切</label>
+                      <label class="check"><input type="checkbox" /> 目安</label>
+                      <span class="raw">原文: 6月 11日 (木曜日) 14:00〜15:00</span>
+                    </span>
+                  </form>
+                  <div class="sched-commit">
+                    <span class="sched-state">浮いている</span>
+                    <button type="button" class="primary">確定にする</button>
+                    <button type="button" class="danger">削除</button>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.sched.committed（確定）</p>
+            <div class="spec__demo spec__demo--stack">
+              <ul class="sched-list">
+                <li class="sched committed">
+                  <form class="sched-form" aria-label="予定の編集">
+                    <input class="sched-title" value="チュートリアル" aria-label="予定名" />
+                    <label>日付 <input type="date" value="2026-06-20" /></label>
+                    <label>終了 <input type="date" /></label>
+                    <label>開始時刻 <input type="text" placeholder="14:00" /></label>
+                    <label>終了時刻 <input type="text" placeholder="15:00" /></label>
+                    <span class="sched-flags">
+                      <label class="check"><input type="checkbox" /> 締切</label>
+                      <label class="check"><input type="checkbox" /> 目安</label>
+                    </span>
+                  </form>
+                  <div class="sched-commit">
+                    <span class="sched-state">確定</span>
+                    <button type="button">確定を取り消す</button>
+                    <button type="button" class="danger">削除</button>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="specs">
+          <div class="spec">
+            <p class="spec__label">.sched-state（状態ピル）</p>
+            <div class="spec__demo">
+              <span class="sched-state">浮いている</span>
+              <span class="sched-state is-committed">確定</span>
+            </div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.empty（予定なし）</p>
+            <div class="spec__demo"><p class="empty">予定はありません（日付を入れると追えます）。</p></div>
+          </div>
+        </div>
+
+        <h3 class="sub-title">ノート・取り込み元・削除</h3>
+        <div class="specs specs--wide">
+          <div class="spec">
+            <p class="spec__label">.note-form</p>
+            <div class="spec__demo spec__demo--stack">
+              <form class="note-form" aria-label="ノート">
+                <label for="d-note">ノート</label>
+                <textarea id="d-note" rows="3" placeholder="補足メモを書く">発表はオンライン可。スライドを準備する。</textarea>
+              </form>
+            </div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.source（取り込みテキスト）</p>
+            <div class="spec__demo spec__demo--stack">
+              <pre class="source">PACLIC 2026
+論文投稿締切 6/30
+採否通知 7/10</pre>
+            </div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.empty（元入力なし）</p>
+            <div class="spec__demo"><p class="empty">元入力はありません。</p></div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.delete-event</p>
+            <div class="spec__demo">
+              <form class="delete-event"><button type="submit" class="danger">このイベントを削除</button></form>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="catalog-foot">
+      <p class="footer-note">
+        product-design / minimal-component — クラス名は web/ に 1:1。<strong>申し送り（web/
+        へ着せる時の小変更）</strong>: 取り込みフォームを<strong>チャット入力風コンポーザー</strong>に再構成（新設
+        <code>intake-row</code> · <code>intake-add</code>（＋ボタン＝ファイル選択） ·
+        <code>intake-submit</code> · <code>intake-thumbs</code> · <code>intake-thumb</code> ·
+        <code>intake-thumb-x</code>）。<strong>自動保存</strong>化により予定・タイトル・ノートの保存ボタンは廃止、削除は確定トグルと同じ行へ。「時刻」→「開始時刻」、一括確定は「予定をまとめて確定／予定の確定を取り消す」。その他の新設クラス
+        <code>button.primary</code> · <code>chip.deadline</code> · <code>chip.approximate</code> ·
+        <code>cal-more</code> · <code>sched-state.is-committed</code> · <code>sched-flags</code> ·
+        <code>event-title</code>。溢れは <code>.cal-more</code> ボタン＋ネイティブ Popover API
+        （<code>.day-popover</code>、JS不要）で日別ポップオーバー表示（React 19 の
+        <code>popover</code>/<code>popoverTarget</code> で移植可・配置は anchor positioning）。
+      </p>
+    </footer>
+  </body>
+</html>

@@ -1,15 +1,18 @@
-"""未確定予定カレンダー: ローカルで動く FastAPI アプリのエントリポイント。"""
+"""未確定予定カレンダー: ローカルで動く FastAPI アプリのエントリポイント。
+
+画面（HTML/JS）は React SPA（web/）が持ち、ここは JSON を返す API に徹する（ADR-0005）。
+"""
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from datetime import date, time
 from pathlib import Path
+from typing import Any
 
 from dotenv import load_dotenv
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
-from fastapi.responses import HTMLResponse, RedirectResponse, Response
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile, status
+from fastapi.responses import Response
+from pydantic import BaseModel
 
 from app import calendar_view, repository
 from app.db import connect, init_db
@@ -34,8 +37,6 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(title="未確定予定カレンダー", lifespan=lifespan)
-app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
 
 @app.get("/health")
@@ -54,29 +55,6 @@ def _parse_month(value: str | None) -> tuple[int, int]:
     return today.year, today.month
 
 
-@app.get("/", response_class=HTMLResponse)
-def index(request: Request, month: str | None = None) -> HTMLResponse:
-    year, month_num = _parse_month(month)
-    conn = connect()
-    try:
-        dated = repository.dated_schedules(conn)
-        undated = repository.undated_schedules(conn)
-    finally:
-        conn.close()
-    view = calendar_view.build_month(year, month_num, dated)
-    return templates.TemplateResponse(
-        request,
-        "index.html",
-        {
-            "title": "未確定予定カレンダー",
-            "view": view,
-            "undated": undated,
-            "weekday_labels": calendar_view.WEEKDAY_LABELS,
-            "today": date.today().isoformat(),
-        },
-    )
-
-
 def _norm_time(value: str) -> str | None:
     """フォームの時刻文字列を 24 時間表記 HH:MM に正規化する。空・不正は None。"""
     if not value:
@@ -87,21 +65,33 @@ def _norm_time(value: str) -> str | None:
         return None
 
 
-def _month_url(month: str | None) -> str:
-    """有効な "YYYY-MM" ならその月のカレンダーへ、無ければトップへ。"""
-    if not month:
-        return "/"
+@app.get("/api/calendar")
+def get_calendar(month: str | None = None) -> dict[str, Any]:
+    """指定月の予定グリッドと、日時未定の予定をまとめて返す。"""
     year, month_num = _parse_month(month)
-    return f"/?month={year:04d}-{month_num:02d}"
+    conn = connect()
+    try:
+        dated = repository.dated_schedules(conn)
+        undated = repository.undated_schedules(conn)
+    finally:
+        conn.close()
+    view = calendar_view.build_month(year, month_num, dated)
+    return {
+        "view": view,
+        "undated": undated,
+        "weekday_labels": calendar_view.WEEKDAY_LABELS,
+        "today": date.today().isoformat(),
+    }
 
 
-@app.post("/intake")
+@app.post("/api/intake")
 def intake(
     text: str = Form(""),
     image: UploadFile | None = File(None),
     month: str = Form(""),
     extractor: ExtractionAdapter = Depends(get_extractor),
-) -> RedirectResponse:
+) -> dict[str, str]:
+    """取り込み: テキスト／画像から1イベントと予定を作る。表示すべき月を返す。"""
     image_bytes: bytes | None = None
     image_mime: str | None = None
     if image is not None and image.filename:
@@ -112,7 +102,7 @@ def intake(
 
     source = build_input(text, image_bytes, image_mime)
     if source is None:
-        return RedirectResponse(url=_month_url(month), status_code=303)
+        return {"month": month}
 
     result = extractor.extract(source, today=date.today())
     conn = connect()
@@ -122,11 +112,11 @@ def intake(
         landed = repository.earliest_dated_month(conn, event_id) or month
     finally:
         conn.close()
-    return RedirectResponse(url=_month_url(landed), status_code=303)
+    return {"month": landed}
 
 
-@app.get("/events/{event_id}", response_class=HTMLResponse)
-def event_detail(request: Request, event_id: int) -> HTMLResponse:
+@app.get("/api/events/{event_id}")
+def get_event(event_id: int) -> repository.EventDetail:
     conn = connect()
     try:
         detail = repository.get_event_detail(conn, event_id)
@@ -134,45 +124,86 @@ def event_detail(request: Request, event_id: int) -> HTMLResponse:
         conn.close()
     if detail is None:
         raise HTTPException(status_code=404, detail="イベントが見つかりません")
-    return templates.TemplateResponse(
-        request, "event.html", {"title": detail.title, "event": detail}
-    )
+    return detail
 
 
-@app.post("/events/{event_id}/edit")
-def edit_event(event_id: int, title: str = Form(...)) -> RedirectResponse:
+class TitleBody(BaseModel):
+    title: str
+
+
+class StateBody(BaseModel):
+    state: str
+
+
+class NoteBody(BaseModel):
+    note: str = ""
+
+
+class ScheduleEditBody(BaseModel):
+    title: str
+    kind: str | None = None
+    is_deadline: bool = False
+    is_approximate: bool = False
+    date: str | None = None
+    end_date: str | None = None
+    time: str | None = None
+    end_time: str | None = None
+
+
+def _check_state(state: str) -> None:
+    if state not in repository.COMMIT_STATES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"未知のコミット状態: {state!r}",
+        )
+
+
+_NO_CONTENT = Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@app.post("/api/events/{event_id}/edit", status_code=status.HTTP_204_NO_CONTENT)
+def edit_event(event_id: int, body: TitleBody) -> Response:
     conn = connect()
     try:
-        repository.update_event_title(conn, event_id, title)
+        repository.update_event_title(conn, event_id, body.title)
     finally:
         conn.close()
-    return RedirectResponse(url=f"/events/{event_id}", status_code=303)
+    return _NO_CONTENT
 
 
-@app.post("/events/{event_id}/commit")
-def commit_event_route(event_id: int, state: str = Form(...)) -> RedirectResponse:
+@app.post("/api/events/{event_id}/commit", status_code=status.HTTP_204_NO_CONTENT)
+def commit_event(event_id: int, body: StateBody) -> Response:
     """一括確定: イベント配下の全予定をまとめて切り替える。"""
+    _check_state(body.state)
     conn = connect()
     try:
-        repository.set_event_commit_state(conn, event_id, state)
+        repository.set_event_commit_state(conn, event_id, body.state)
     finally:
         conn.close()
-    return RedirectResponse(url=f"/events/{event_id}", status_code=303)
+    return _NO_CONTENT
 
 
-@app.post("/schedules/{schedule_id}/commit")
-def commit_schedule_route(
-    schedule_id: int, event_id: int = Form(...), state: str = Form(...)
-) -> RedirectResponse:
+@app.post("/api/events/{event_id}/note", status_code=status.HTTP_204_NO_CONTENT)
+def edit_note(event_id: int, body: NoteBody) -> Response:
     conn = connect()
     try:
-        repository.set_schedule_commit_state(conn, schedule_id, state)
+        repository.update_note(conn, event_id, body.note)
     finally:
         conn.close()
-    return RedirectResponse(url=f"/events/{event_id}", status_code=303)
+    return _NO_CONTENT
 
 
-@app.get("/events/{event_id}/image")
+@app.post("/api/events/{event_id}/delete", status_code=status.HTTP_204_NO_CONTENT)
+def delete_event(event_id: int) -> Response:
+    conn = connect()
+    try:
+        repository.delete_event(conn, event_id)
+    finally:
+        conn.close()
+    return _NO_CONTENT
+
+
+@app.get("/api/events/{event_id}/image")
 def event_image(event_id: int) -> Response:
     conn = connect()
     try:
@@ -185,64 +216,42 @@ def event_image(event_id: int) -> Response:
     return Response(content=data, media_type=mime)
 
 
-@app.post("/events/{event_id}/note")
-def edit_note(event_id: int, note: str = Form("")) -> RedirectResponse:
+@app.post("/api/schedules/{schedule_id}/commit", status_code=status.HTTP_204_NO_CONTENT)
+def commit_schedule(schedule_id: int, body: StateBody) -> Response:
+    _check_state(body.state)
     conn = connect()
     try:
-        repository.update_note(conn, event_id, note)
+        repository.set_schedule_commit_state(conn, schedule_id, body.state)
     finally:
         conn.close()
-    return RedirectResponse(url=f"/events/{event_id}", status_code=303)
+    return _NO_CONTENT
 
 
-@app.post("/events/{event_id}/delete")
-def delete_event_route(event_id: int) -> RedirectResponse:
-    conn = connect()
-    try:
-        repository.delete_event(conn, event_id)
-    finally:
-        conn.close()
-    return RedirectResponse(url="/", status_code=303)
-
-
-@app.post("/schedules/{schedule_id}/edit")
-def edit_schedule(
-    schedule_id: int,
-    event_id: int = Form(...),
-    title: str = Form(...),
-    kind: str = Form(""),
-    is_deadline: bool = Form(False),
-    is_approximate: bool = Form(False),
-    date: str = Form(""),
-    end_date: str = Form(""),
-    time: str = Form(""),
-    end_time: str = Form(""),
-) -> RedirectResponse:
+@app.post("/api/schedules/{schedule_id}/edit", status_code=status.HTTP_204_NO_CONTENT)
+def edit_schedule(schedule_id: int, body: ScheduleEditBody) -> Response:
     fields = repository.ScheduleFields(
-        title=title,
-        kind=kind or None,
-        is_deadline=is_deadline,
-        is_approximate=is_approximate,
-        date=date or None,
-        end_date=end_date or None,
-        time=_norm_time(time),
-        end_time=_norm_time(end_time),
+        title=body.title,
+        kind=body.kind or None,
+        is_deadline=body.is_deadline,
+        is_approximate=body.is_approximate,
+        date=body.date or None,
+        end_date=body.end_date or None,
+        time=_norm_time(body.time or ""),
+        end_time=_norm_time(body.end_time or ""),
     )
     conn = connect()
     try:
         repository.update_schedule(conn, schedule_id, fields)
     finally:
         conn.close()
-    return RedirectResponse(url=f"/events/{event_id}", status_code=303)
+    return _NO_CONTENT
 
 
-@app.post("/schedules/{schedule_id}/delete")
-def delete_schedule_route(
-    schedule_id: int, event_id: int = Form(...)
-) -> RedirectResponse:
+@app.post("/api/schedules/{schedule_id}/delete", status_code=status.HTTP_204_NO_CONTENT)
+def delete_schedule(schedule_id: int) -> Response:
     conn = connect()
     try:
         repository.delete_schedule(conn, schedule_id)
     finally:
         conn.close()
-    return RedirectResponse(url=f"/events/{event_id}", status_code=303)
+    return _NO_CONTENT
