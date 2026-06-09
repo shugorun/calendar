@@ -43,6 +43,17 @@ export function addSchedule(eventId: number): Promise<{ id: number }> {
   return postJson<{ id: number }>(`/api/events/${eventId}/schedules`, {})
 }
 
+// 既存イベントに、画像/テキストから抽出した予定を追加する。
+export function intakeIntoEvent(
+  eventId: number,
+  form: FormData,
+): Promise<{ added: number }> {
+  return request<{ added: number }>(`/api/events/${eventId}/intake`, {
+    method: 'POST',
+    body: form,
+  })
+}
+
 export function getEvent(id: number): Promise<EventDetail> {
   return request<EventDetail>(`/api/events/${id}`)
 }

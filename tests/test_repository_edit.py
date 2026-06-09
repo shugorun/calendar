@@ -311,6 +311,50 @@ def test_add_blank_schedule_missing_event(conn: sqlite3.Connection) -> None:
     assert repository.add_blank_schedule(conn, 999) is None
 
 
+def test_add_schedules_from_appends_and_keeps_source(
+    conn: sqlite3.Connection,
+) -> None:
+    event_id = _seed(conn)  # 元入力はテキスト『〇〇インターン』、予定2件
+    added = repository.add_schedules_from(
+        conn,
+        event_id,
+        ExtractionInput(kind="image", image=b"NEW", image_mime="image/png"),
+        ExtractionResult(
+            event_title="無視される",
+            schedules=[ExtractedSchedule(title="追加の予定", date=date(2026, 7, 1))],
+        ),
+    )
+    assert added == 1
+    detail = repository.get_event_detail(conn, event_id)
+    assert detail is not None
+    assert len(detail.schedules) == 3  # 既存2＋追加1
+    assert any(s.title == "追加の予定" for s in detail.schedules)
+    # 既に元入力があるイベントは上書きしない（画像は保存されない）
+    assert repository.get_event_image(conn, event_id) is None
+
+
+def test_add_schedules_from_sets_source_when_empty(
+    conn: sqlite3.Connection,
+) -> None:
+    event_id = repository.create_manual_event(conn, "手動", [])  # 元入力なし
+    repository.add_schedules_from(
+        conn,
+        event_id,
+        ExtractionInput(kind="image", image=b"IMG", image_mime="image/png"),
+        ExtractionResult(event_title="x", schedules=[ExtractedSchedule(title="面接")]),
+    )
+    got = repository.get_event_image(conn, event_id)  # 元入力が無かったので保存される
+    assert got is not None
+    assert got[0] == b"IMG"
+
+
+def test_add_schedules_from_missing_event(conn: sqlite3.Connection) -> None:
+    n = repository.add_schedules_from(
+        conn, 999, ExtractionInput(kind="text", text="x"), ExtractionResult("x", [])
+    )
+    assert n == -1
+
+
 def test_eventless_events_lists_only_schedule_less_events(
     conn: sqlite3.Connection,
 ) -> None:

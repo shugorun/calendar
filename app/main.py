@@ -262,6 +262,37 @@ def event_image(event_id: int) -> Response:
     return Response(content=data, media_type=mime)
 
 
+@app.post("/api/events/{event_id}/intake")
+def intake_into_event(
+    event_id: int,
+    text: str = Form(""),
+    image: UploadFile | None = File(None),
+    extractor: ExtractionAdapter = Depends(get_extractor),
+) -> dict[str, int]:
+    """既存イベントに、画像／テキストから抽出した予定を追加する。追加件数を返す。"""
+    image_bytes: bytes | None = None
+    image_mime: str | None = None
+    if image is not None and image.filename:
+        data = image.file.read()
+        if data:
+            image_bytes = data
+            image_mime = image.content_type
+
+    source = build_input(text, image_bytes, image_mime)
+    if source is None:
+        return {"added": 0}
+
+    result = extractor.extract(source, today=date.today())
+    conn = connect()
+    try:
+        added = repository.add_schedules_from(conn, event_id, source, result)
+    finally:
+        conn.close()
+    if added < 0:
+        raise HTTPException(status_code=404, detail="イベントが見つかりません")
+    return {"added": added}
+
+
 @app.post("/api/events/{event_id}/schedules", status_code=status.HTTP_201_CREATED)
 def add_schedule(event_id: int) -> dict[str, int]:
     """既存イベントに空の予定を1件足す（その場でインライン編集する前提）。"""

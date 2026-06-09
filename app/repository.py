@@ -369,6 +369,54 @@ def delete_schedule(conn: sqlite3.Connection, schedule_id: int) -> None:
     conn.commit()
 
 
+def add_schedules_from(
+    conn: sqlite3.Connection,
+    event_id: int,
+    source: ExtractionInput,
+    result: ExtractionResult,
+) -> int:
+    """既存イベントに抽出結果の予定を追加する。元入力が無ければこの入力を保存。
+
+    返り値は追加した予定数。イベントが無ければ -1。
+    """
+    ev = conn.execute(
+        "SELECT source_image, source_text FROM events WHERE id = ?", (event_id,)
+    ).fetchone()
+    if ev is None:
+        return -1
+    now = _now_iso()
+    # 元入力（画像/テキスト）が未保存のイベントなら、今回の入力を元入力として残す。
+    if ev["source_image"] is None and not ev["source_text"]:
+        conn.execute(
+            "UPDATE events SET source_kind = ?, source_text = ?, "
+            "source_image = ?, source_image_mime = ? WHERE id = ?",
+            (source.kind, source.text, source.image, source.image_mime, event_id),
+        )
+    for sched in result.schedules:
+        is_approximate = sched.is_approximate and sched.date is not None
+        conn.execute(
+            "INSERT INTO schedules "
+            "(event_id, title, kind, is_deadline, is_approximate, date, end_date, "
+            "time, end_time, raw_date_text, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                event_id,
+                sched.title,
+                sched.kind,
+                1 if sched.is_deadline else 0,
+                1 if is_approximate else 0,
+                sched.date.isoformat() if sched.date else None,
+                sched.end_date.isoformat() if sched.end_date else None,
+                sched.time.isoformat() if sched.time else None,
+                sched.end_time.isoformat() if sched.end_time else None,
+                sched.raw_date_text,
+                now,
+            ),
+        )
+    conn.commit()
+    return len(result.schedules)
+
+
 def add_blank_schedule(conn: sqlite3.Connection, event_id: int) -> int | None:
     """既存イベントに空（タイトル無し・日時未定・浮いている）の予定を1件足す。
 

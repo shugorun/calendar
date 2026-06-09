@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FocusEvent, FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import * as api from '../api'
+import { IntakeComposer } from '../components/IntakeComposer'
 import { formatDateInput, formatTimeInput, toIsoDateOrNull } from '../format'
 import type { EditableSchedule, EventDetail } from '../types'
 
@@ -278,9 +279,7 @@ export function EventPage() {
       </form>
 
       {total === 0 ? (
-        <p className="empty">
-          予定はありません（「＋予定を追加」で追えます）。
-        </p>
+        <p className="empty">予定はありません</p>
       ) : (
         <ul className="sched-list">
           {event.schedules.map((s) => (
@@ -292,6 +291,13 @@ export function EventPage() {
         ＋予定を追加
       </button>
 
+      <IntakeComposer
+        submit={async (form) => {
+          await api.intakeIntoEvent(eventId, form)
+          load()
+        }}
+      />
+
       <form
         className="note-form"
         aria-label="ノート"
@@ -302,7 +308,7 @@ export function EventPage() {
           name="note"
           rows={4}
           defaultValue={event.note}
-          placeholder="補足メモを書く"
+          placeholder="メモを書く"
           aria-label="ノート"
           onBlur={saveNote}
         />
