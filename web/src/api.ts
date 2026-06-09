@@ -2,6 +2,7 @@ import type {
   CalendarResponse,
   CommitState,
   EventDetail,
+  ManualEventInput,
   ScheduleEdit,
 } from './types'
 
@@ -32,6 +33,14 @@ export function intake(form: FormData): Promise<{ month: string }> {
     method: 'POST',
     body: form,
   })
+}
+
+export function manualAdd(body: ManualEventInput): Promise<{ month: string }> {
+  return postJson<{ month: string }>('/api/manual', body)
+}
+
+export function addSchedule(eventId: number): Promise<{ id: number }> {
+  return postJson<{ id: number }>(`/api/events/${eventId}/schedules`, {})
 }
 
 export function getEvent(id: number): Promise<EventDetail> {

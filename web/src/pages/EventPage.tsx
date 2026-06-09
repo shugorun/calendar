@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FocusEvent, FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import * as api from '../api'
+import { formatDateInput, formatTimeInput, toIsoDateOrNull } from '../format'
 import type { EditableSchedule, EventDetail } from '../types'
 
 function field(form: FormData, name: string): string {
@@ -10,9 +11,12 @@ function field(form: FormData, name: string): string {
 
 // 4桁の数字を入力 → 24時間表記 hh:mm に自動整形（"1400" → "14:00"）。
 function formatTime(event: ChangeEvent<HTMLInputElement>) {
-  const digits = event.currentTarget.value.replace(/\D/g, '').slice(0, 4)
-  event.currentTarget.value =
-    digits.length > 2 ? `${digits.slice(0, 2)}:${digits.slice(2)}` : digits
+  event.currentTarget.value = formatTimeInput(event.currentTarget.value)
+}
+
+// 数字を入力 → YYYY-MM-DD に自動整形（"20260620" → "2026-06-20"）。
+function formatDate(event: ChangeEvent<HTMLInputElement>) {
+  event.currentTarget.value = formatDateInput(event.currentTarget.value)
 }
 
 function ScheduleItem({
@@ -23,23 +27,38 @@ function ScheduleItem({
   onChanged: () => void
 }) {
   const formRef = useRef<HTMLFormElement>(null)
+  const savingRef = useRef<Promise<void>>(Promise.resolve())
   const committed = schedule.commit_state === 'committed'
 
-  // 自動保存: いずれかの項目が変わったらフォーム全体を送る（kind は UI 非編集なので現値を維持）。
-  async function save() {
+  // 自動保存（永続のみ・再ソートはしない）。kind は UI 非編集なので現値を維持。
+  function save(): Promise<void> {
     const form = formRef.current
-    if (!form) return
+    if (!form) return Promise.resolve()
     const f = new FormData(form)
-    await api.editSchedule(schedule.id, {
+    const p = api.editSchedule(schedule.id, {
       title: field(f, 'title'),
       kind: schedule.kind,
       is_deadline: f.get('is_deadline') === 'on',
       is_approximate: f.get('is_approximate') === 'on',
-      date: field(f, 'date') || null,
-      end_date: field(f, 'end_date') || null,
+      date: toIsoDateOrNull(field(f, 'date')), // 未完成・不正な日付は日時未定に
+      end_date: toIsoDateOrNull(field(f, 'end_date')),
       time: field(f, 'time') || null,
       end_time: field(f, 'end_time') || null,
     })
+    savingRef.current = p
+    return p
+  }
+
+  // 日付欄を抜けたら正規化（完全な実在日付だけ残す）してから保存。
+  function saveDate(e: FocusEvent<HTMLInputElement>) {
+    e.currentTarget.value = toIsoDateOrNull(e.currentTarget.value) ?? ''
+    save()
+  }
+
+  // カードからフォーカスが外れた時だけ再取得（＝再ソート）。直近の保存を待つ。
+  async function onCardBlur(e: FocusEvent<HTMLLIElement>) {
+    if (e.currentTarget.contains(e.relatedTarget as Node | null)) return
+    await savingRef.current
     onChanged()
   }
 
@@ -54,7 +73,7 @@ function ScheduleItem({
   }
 
   return (
-    <li className={`sched ${schedule.commit_state}`}>
+    <li className={`sched ${schedule.commit_state}`} onBlur={onCardBlur}>
       <form
         ref={formRef}
         className="sched-form"
@@ -66,24 +85,35 @@ function ScheduleItem({
           name="title"
           defaultValue={schedule.title}
           aria-label="予定名"
+          placeholder="予定名"
           onBlur={save}
         />
         <label>
           日付{' '}
           <input
-            type="date"
+            type="text"
             name="date"
+            className="sched-date"
             defaultValue={schedule.date ?? ''}
-            onChange={save}
+            placeholder="yyyy-mm-dd"
+            maxLength={10}
+            inputMode="numeric"
+            onChange={formatDate}
+            onBlur={saveDate}
           />
         </label>
         <label>
           終了{' '}
           <input
-            type="date"
+            type="text"
             name="end_date"
+            className="sched-date"
             defaultValue={schedule.end_date ?? ''}
-            onChange={save}
+            placeholder="yyyy-mm-dd"
+            maxLength={10}
+            inputMode="numeric"
+            onChange={formatDate}
+            onBlur={saveDate}
           />
         </label>
         <label>
@@ -200,6 +230,12 @@ export function EventPage() {
     load()
   }
 
+  // 同じイベントに予定を1件足す（空で作ってその場でインライン編集）。
+  async function addSchedule() {
+    await api.addSchedule(eventId)
+    load()
+  }
+
   async function removeEvent(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     await api.deleteEvent(eventId)
@@ -242,7 +278,9 @@ export function EventPage() {
       </form>
 
       {total === 0 ? (
-        <p className="empty">予定はありません（日付を入れると追えます）。</p>
+        <p className="empty">
+          予定はありません（「＋予定を追加」で追えます）。
+        </p>
       ) : (
         <ul className="sched-list">
           {event.schedules.map((s) => (
@@ -250,6 +288,9 @@ export function EventPage() {
           ))}
         </ul>
       )}
+      <button type="button" className="sched-add" onClick={addSchedule}>
+        ＋予定を追加
+      </button>
 
       <form
         className="note-form"

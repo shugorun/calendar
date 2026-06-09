@@ -50,6 +50,10 @@
   --rounded-md: 8px;
   --rounded-lg: 12px;
   --rounded-pill: 9999px;
+
+  /* カレンダーの日セル高（5/6週でフッターを動かさない6週確保と1か所で同期） */
+  --cal-day-h: 104px;
+  --cal-weekday-h: 30px;
 }
 
 /* --- リセット ----------------------------------------------------- */
@@ -264,11 +268,45 @@ main {
   font-size: 16px;
 }
 
+/* 取り込みバー左のカレンダーicon（枠の外）と、その囲み。
+   両側に同じ余白を取り、バーは中央のまま左余白に icon を置く（狭い画面でも欠けない）。 */
+.composer-row {
+  position: relative;
+  max-width: 960px;
+  margin-inline: auto;
+  padding-inline: 42px;
+}
+.composer-row .intake {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+.intake-cal {
+  position: absolute;
+  left: 0; /* 左余白に置く＝バー枠の外 */
+  bottom: var(--space-sm); /* バー行に下端を合わせる */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: var(--rounded-pill);
+  border: 1px solid var(--hairline);
+  background: var(--canvas);
+  color: var(--muted);
+}
+.intake-cal:hover,
+.intake-cal[aria-expanded='true'] {
+  border-color: var(--muted-soft);
+  color: var(--ink);
+}
+
 /* 取り込みフォーム（チャット入力風コンポーザー） */
 .intake {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
+  gap: 0;
   width: 100%;
   max-width: 720px;
   margin-inline: auto;
@@ -277,6 +315,31 @@ main {
   border: 1px solid var(--hairline);
   border-radius: var(--rounded-lg);
   box-shadow: 0 1px 3px rgba(20, 20, 19, 0.06);
+}
+/* サムネ置き場は常設し、画像が入ったら 0fr→1fr で滑らかに開く */
+.intake-media {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.25s ease,
+    opacity 0.25s ease;
+}
+.intake-media:has(.intake-thumb) {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.intake-media > .intake-thumbs {
+  overflow: hidden;
+  min-height: 0;
+}
+.intake:has(.intake-thumb) {
+  gap: var(--space-sm); /* サムネがある時だけバーとの間隔を空ける */
+}
+@media (prefers-reduced-motion: reduce) {
+  .intake-media {
+    transition: none;
+  }
 }
 .intake-thumbs {
   display: flex;
@@ -387,7 +450,10 @@ main {
   color: var(--ink);
 }
 
-/* カレンダー表 */
+/* カレンダー表。5/6週でフッターが動かないよう6週ぶんの高さを確保（5週月は下に余白） */
+.cal-grid-wrap {
+  min-block-size: calc(var(--cal-weekday-h) + 6 * var(--cal-day-h));
+}
 .cal-grid {
   width: 100%;
   border-collapse: collapse;
@@ -411,7 +477,7 @@ main {
   border-bottom: 1px solid var(--hairline);
 }
 .cal-day {
-  height: 104px;
+  height: var(--cal-day-h);
   vertical-align: top;
   padding: var(--space-xxs);
   border: 1px solid var(--hairline-soft);
@@ -544,34 +610,84 @@ main {
   }
 }
 
-/* 日時未定 */
-.undated h2 {
-  margin-bottom: var(--space-sm);
+/* カレンダーはフル幅のまま圧迫しない（⑦）。未定は main の外＝右ガター（右余白）に置く。
+   ガターが足りない幅では下へ落とす（@media）。 */
+.cal-layout {
+  position: relative;
 }
-.undated ul {
+.cal-layout > .side-panel {
+  position: absolute;
+  top: 0;
+  left: calc(100% + var(--space-lg)); /* カレンダーのすぐ右＝右ガターへ */
+  width: 240px;
+}
+.side-panel__head {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
 }
-.undated li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: var(--space-xs);
-  padding: var(--space-xs) 0;
-  border-bottom: 1px solid var(--hairline-soft);
-}
-.undated .what {
-  color: var(--ink);
-  font-weight: 500;
-}
-.undated .ev {
-  font-size: 13px;
+.side-panel__title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
   color: var(--muted);
 }
-.undated .raw {
-  font-size: 13px;
+.side-panel__count {
+  font-size: 11px;
   color: var(--muted-soft);
+}
+.undated-list {
+  display: flex;
+  flex-wrap: wrap; /* 横並びで埋め、入らなければ折り返す（下に回った時も詰まらない） */
+  gap: var(--space-xs);
+}
+.undated-card {
+  flex: 1 1 200px;
+  min-width: 0;
+  padding: var(--space-xs) var(--space-sm);
+  background: #fff;
+  border: 1px solid var(--hairline-soft);
+  border-radius: var(--rounded-md);
+}
+.undated-card:hover {
+  border-color: var(--muted-soft);
+}
+.undated-card__what {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--body);
+}
+.undated-card__ev {
+  display: block;
+  margin-top: 1px;
+  font-size: 11px;
+  color: var(--muted-soft);
+}
+.undated-card__raw {
+  font-size: 11px;
+  color: var(--muted-soft);
+}
+
+/* ② 読めない日付（例「6/31」）が残る未定だけ黄色背景で要確認 */
+.undated-card.needs-fix {
+  border-color: color-mix(in srgb, var(--warning) 45%, var(--hairline));
+  background: color-mix(in srgb, var(--warning) 16%, #fff);
+}
+.undated-card.needs-fix .undated-card__raw {
+  color: var(--warning);
+}
+.badge-fix {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 6px;
+  padding: 1px 8px;
+  border-radius: var(--rounded-pill);
+  background: color-mix(in srgb, var(--warning) 18%, transparent);
+  color: var(--warning);
+  font-size: 11px;
+  font-weight: 600;
 }
 
 /* --- イベント詳細画面 -------------------------------------------- */
@@ -642,7 +758,7 @@ main {
 .sched-form input[type='date'] {
   width: auto;
 }
-.sched-form input[type='text']:not(.sched-title) {
+.sched-form input[type='text']:not(.sched-title):not(.sched-date) {
   width: 78px;
 }
 .sched-title {
@@ -688,6 +804,68 @@ main {
 .sched-state.is-committed {
   background: color-mix(in srgb, var(--primary) 16%, transparent);
   color: var(--primary-active);
+}
+
+/* 手動追加フォーム（⑤）。白背景は付けない＝詳細画面と同じく素のまま。中心は入力バーとそろえる */
+.manual-add {
+  margin-inline: auto;
+}
+.manual-add .title-form {
+  margin-bottom: var(--space-md);
+}
+.manual-add__foot {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-md);
+}
+.manual-add__foot .primary {
+  min-width: 160px;
+}
+/* 手動追加を「ぬるっと」開く（0fr→1fr＋opacity）。閉じている間はクリップ */
+.manual-reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.25s ease,
+    opacity 0.25s ease;
+}
+.manual-reveal.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.manual-reveal > .manual-add {
+  overflow: hidden;
+  min-height: 0;
+  padding-top: var(
+    --space-md
+  ); /* 開いた時だけバーとの間隔（折りたたみ時はクリップ） */
+}
+@media (prefers-reduced-motion: reduce) {
+  .manual-reveal {
+    transition: none;
+  }
+}
+/* 確定は「確定」チェック1つ（詳細画面の確定はトグルのまま） */
+.sched-commit .commit-check {
+  margin-right: auto;
+}
+/* 予定を1件足す（⑤手動追加／⑧詳細画面で共用・全幅で統一・上に余白） */
+.sched-add {
+  display: flex;
+  width: 100%;
+  margin-top: var(--space-md);
+  background: transparent;
+  border: 1px dashed var(--hairline);
+  color: var(--muted);
+}
+.sched-add:hover {
+  border: 1px dashed var(--muted-soft);
+  color: var(--ink);
+}
+/* 数字入力にした日付欄（時刻欄より広め） */
+.sched-form .sched-date {
+  width: 116px;
 }
 
 /* ノート / 取り込み元 / 削除 */
@@ -744,8 +922,17 @@ main {
 }
 
 /* レスポンシブ ----------------------------------------------------- */
+/* 右ガターに未定を置く余白が無い幅では、カレンダーの下へ落とす */
+@media (max-width: 1640px) {
+  .cal-layout > .side-panel {
+    position: static;
+    width: auto;
+    margin-top: var(--space-lg);
+  }
+}
 @media (max-width: 720px) {
-  .cal-day {
-    height: 84px;
+  /* 日セル高を縮める（6週確保も --cal-day-h 経由で自動追従） */
+  :root {
+    --cal-day-h: 84px;
   }
 }

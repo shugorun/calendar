@@ -19,6 +19,7 @@ export interface UndatedSchedule {
   event_title: string
   title: string
   raw_date_text: string | null
+  needs_fix: boolean // 読めない日付（例「6/31」）が残る＝日付の確認を促す
 }
 
 export interface DayCell {
@@ -78,4 +79,22 @@ export interface ScheduleEdit {
   end_date: string | null
   time: string | null
   end_time: string | null
+}
+
+// 手動追加（AIを介さない）: イベント1件＋予定を作る。
+export interface ManualScheduleInput {
+  title: string
+  date: string | null
+  end_date: string | null
+  time: string | null
+  end_time: string | null
+  is_deadline: boolean
+  is_approximate: boolean
+  committed: boolean
+}
+
+export interface ManualEventInput {
+  event_title: string
+  schedules: ManualScheduleInput[]
+  month: string
 }
