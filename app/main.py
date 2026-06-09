@@ -115,6 +115,50 @@ def intake(
     return {"month": landed}
 
 
+class ManualScheduleBody(BaseModel):
+    title: str = ""
+    date: str | None = None
+    end_date: str | None = None
+    time: str | None = None
+    end_time: str | None = None
+    is_deadline: bool = False
+    is_approximate: bool = False
+    committed: bool = False
+
+
+class ManualEventBody(BaseModel):
+    event_title: str = ""
+    schedules: list[ManualScheduleBody] = []
+    month: str = ""
+
+
+@app.post("/api/manual")
+def manual(body: ManualEventBody) -> dict[str, str]:
+    """手動追加: AI を介さずイベント1件＋予定を作る。表示すべき月を返す。"""
+    schedules = [
+        repository.ManualSchedule(
+            title=s.title.strip(),
+            date=s.date or None,
+            end_date=s.end_date or None,
+            time=_norm_time(s.time or ""),
+            end_time=_norm_time(s.end_time or ""),
+            is_deadline=s.is_deadline,
+            is_approximate=s.is_approximate,
+            committed=s.committed,
+        )
+        for s in body.schedules
+    ]
+    conn = connect()
+    try:
+        event_id = repository.create_manual_event(
+            conn, body.event_title.strip() or "取り込み", schedules
+        )
+        landed = repository.earliest_dated_month(conn, event_id) or body.month
+    finally:
+        conn.close()
+    return {"month": landed}
+
+
 @app.get("/api/events/{event_id}")
 def get_event(event_id: int) -> repository.EventDetail:
     conn = connect()
@@ -214,6 +258,19 @@ def event_image(event_id: int) -> Response:
         raise HTTPException(status_code=404, detail="画像がありません")
     data, mime = image
     return Response(content=data, media_type=mime)
+
+
+@app.post("/api/events/{event_id}/schedules", status_code=status.HTTP_201_CREATED)
+def add_schedule(event_id: int) -> dict[str, int]:
+    """既存イベントに空の予定を1件足す（その場でインライン編集する前提）。"""
+    conn = connect()
+    try:
+        new_id = repository.add_blank_schedule(conn, event_id)
+    finally:
+        conn.close()
+    if new_id is None:
+        raise HTTPException(status_code=404, detail="イベントが見つかりません")
+    return {"id": new_id}
 
 
 @app.post("/api/schedules/{schedule_id}/commit", status_code=status.HTTP_204_NO_CONTENT)

@@ -44,24 +44,35 @@ def _prompt(today: date) -> str:
         "あなたは募集・案内のテキストや画像から予定を抽出するアシスタント。"
         f"今日は {today.isoformat()}。結果は指定スキーマの JSON で返す。"
         "タイトル・種類は最も慣用的で自然な言い方にする。\n"
-        "- event_title: 入力が表す募集・案件の短い名前。補足テキストがあれば"
-        "それを優先的にタイトルへ反映する（例: 補足『PACLIC』＋締切 → "
-        "『PACLIC 論文締切』）\n"
+        "- event_title: 入力が表す募集・案件・大会・組織などの"
+        "固有名だけにする（短く）。面接・締切・説明会のような"
+        "予定の種類・動作は event_title に入れない。"
+        "画面ではこの event_title が各予定名の前に"
+        "『イベント名 予定名』と並んで表示される\n"
         "- schedules: 日付に関わる項目の配列。各要素は\n"
-        "  - title: その予定の名前。可能な限り固有名（イベント名・大会名・"
-        "補足テキスト）を含め、単体で見て何の予定か分かるようにする"
-        "（例:『論文投稿締切』ではなく『PACLIC論文投稿締切』）\n"
+        "  - title: その予定の種類・動作だけにする。"
+        "event_title（固有名）は繰り返さず、同じ語を重複させない。"
+        "例: 入力『レアゾンHD 面接』→ event_title『レアゾンHD』＋"
+        "title『面接』で、表示は『レアゾンHD 面接』。"
+        "『PACLIC 論文投稿締切』→『PACLIC』＋『論文投稿締切』\n"
         "  - kind: 種類ラベル（例: 応募締切 / 面接 / 説明会）\n"
         "  - is_deadline: 締切なら true\n"
-        "  - is_approximate: 日付が『◯◯以降』『随時』『◯週間程度』『目安』『頃』など、"
-        "特定の単日に確定していない曖昧な表現なら true。確定した単日なら false\n"
+        "  - is_approximate: 日付が入っていて、かつ『◯◯以降』『随時』『◯週間程度』"
+        "『目安』『頃』など特定の単日に確定していない曖昧な表現なら true。"
+        "確定した単日なら false。日付が無い・読み取れない場合は必ず false"
+        "（is_approximate は日付があるときだけの属性）\n"
         "  - date: YYYY-MM-DD（期間なら開始日。is_approximate なら最も早い日）。"
-        "年が無ければ今日以降で最も近い年。具体的な日が全く不明なら null\n"
+        "年が無ければ今日以降で最も近い年。具体的な日が全く不明なら null。"
+        "『6/31』のようにカレンダー上に実在しない日付は、近い日へ勝手に丸めたり"
+        "繰り上げたりせず date は null にし、元の表記を raw_date_text に残す\n"
         "  - end_date: 期間（例: 6/25〜6/28）の終了日 YYYY-MM-DD。単日なら null\n"
         "  - time: 開始時刻 HH:MM。不明なら null\n"
         "  - end_time: 終了時刻 HH:MM（例: 14:00〜15:00 の 15:00）。無ければ null\n"
-        "  - raw_date_text: 元の日付表現（例: 7月中 / 後日発表）\n"
-        "日付がまったく無い入力なら schedules は空配列にする。"
+        "  - raw_date_text: 元の日付表現（例: 7月中 / 後日発表 / 6/31）\n"
+        "予定として意味のある項目（面接・締切・説明会など）が読み取れるなら、"
+        "日付が無くても date=null の予定として必ず schedules に入れる"
+        "（日時未定として未定ビューに出すため）。"
+        "予定と呼べる項目が何も無いときだけ schedules を空配列にする。"
     )
 
 
@@ -83,23 +94,26 @@ def _parse_time(value: str | None) -> time | None:
         return None
 
 
+def _to_schedule(item: _SchedulePayload) -> ExtractedSchedule:
+    parsed_date = _parse_date(item.date)
+    # 目安は日付を伴う属性（CONTEXT）。日付が無い／不正で落ちたときは未定扱いにする。
+    return ExtractedSchedule(
+        title=item.title,
+        is_deadline=item.is_deadline,
+        is_approximate=item.is_approximate and parsed_date is not None,
+        kind=item.kind,
+        date=parsed_date,
+        end_date=_parse_date(item.end_date),
+        time=_parse_time(item.time),
+        end_time=_parse_time(item.end_time),
+        raw_date_text=item.raw_date_text,
+    )
+
+
 def _to_result(payload: _EventPayload) -> ExtractionResult:
     return ExtractionResult(
         event_title=payload.event_title or "取り込み",
-        schedules=[
-            ExtractedSchedule(
-                title=item.title,
-                is_deadline=item.is_deadline,
-                is_approximate=item.is_approximate,
-                kind=item.kind,
-                date=_parse_date(item.date),
-                end_date=_parse_date(item.end_date),
-                time=_parse_time(item.time),
-                end_time=_parse_time(item.end_time),
-                raw_date_text=item.raw_date_text,
-            )
-            for item in payload.schedules
-        ],
+        schedules=[_to_schedule(item) for item in payload.schedules],
     )
 
 

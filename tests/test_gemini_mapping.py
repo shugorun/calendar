@@ -57,6 +57,23 @@ def test_to_result_parses_dates_times_and_flags() -> None:
     assert approx.is_approximate is True  # 「6/12以降随時」は目安として写す
 
 
+def test_no_date_forces_not_approximate() -> None:
+    # 日付が無い／不正で None に落ちた予定は目安にせず日時未定にする。
+    payload = _EventPayload(
+        event_title="レアゾンHD面接",
+        schedules=[
+            _SchedulePayload(title="面接", date=None, is_approximate=True),
+            _SchedulePayload(title="失効", date="2026-06-31", is_approximate=True),
+        ],
+    )
+    result = _to_result(payload)
+    no_date, bad_date = result.schedules
+    assert no_date.date is None
+    assert no_date.is_approximate is False
+    assert bad_date.date is None  # 実在しない日付は None に落ちる
+    assert bad_date.is_approximate is False
+
+
 def test_empty_title_falls_back() -> None:
     result = _to_result(_EventPayload(event_title="", schedules=[]))
     assert result.event_title == "取り込み"

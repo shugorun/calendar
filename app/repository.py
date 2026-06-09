@@ -1,10 +1,19 @@
 """events / schedules の保存・取得（ADR-0004: 識別は内部ID、名前はユーザー所有）。"""
 
+import re
 import sqlite3
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
 from app.extraction.adapter import ExtractionInput, ExtractionResult
+
+# 「M/D」「M月D日」など日付らしい表記。未定なのに残る＝読めなかった日付。
+_DATEISH_RE = re.compile(r"\d{1,2}\s*[/／月]\s*\d{1,2}")
+
+
+def _looks_like_unreadable_date(raw: str | None) -> bool:
+    """raw_date_text が具体的な日付表記なのに置けていない（例「6/31」）＝要確認。"""
+    return raw is not None and _DATEISH_RE.search(raw) is not None
 
 
 @dataclass
@@ -30,6 +39,7 @@ class UndatedSchedule:
     event_title: str
     title: str
     raw_date_text: str | None
+    needs_fix: bool  # 読めない日付（例「6/31」）が残っている＝日付の確認を促す
 
 
 def _now_iso() -> str:
@@ -75,6 +85,58 @@ def create_event(
                 sched.time.isoformat() if sched.time else None,
                 sched.end_time.isoformat() if sched.end_time else None,
                 sched.raw_date_text,
+                now,
+            ),
+        )
+    conn.commit()
+    return event_id
+
+
+@dataclass
+class ManualSchedule:
+    """手動追加フォームの1予定。AI 抽出を介さず、確定状態も持つ。"""
+
+    title: str
+    date: str | None = None
+    end_date: str | None = None
+    time: str | None = None
+    end_time: str | None = None
+    is_deadline: bool = False
+    is_approximate: bool = False
+    committed: bool = False
+
+
+def create_manual_event(
+    conn: sqlite3.Connection, title: str, schedules: list[ManualSchedule]
+) -> int:
+    """手動入力でイベント1件＋予定を作る（元入力は持たない＝source_kind='text'）。"""
+    now = _now_iso()
+    cur = conn.execute(
+        "INSERT INTO events (title, source_kind, source_text, source_image, "
+        "source_image_mime, created_at) VALUES (?, 'text', NULL, NULL, NULL, ?)",
+        (title, now),
+    )
+    event_id = cur.lastrowid
+    if event_id is None:
+        raise RuntimeError("events への INSERT で id が取得できなかった")
+    for s in schedules:
+        # 目安は日付を伴う属性（CONTEXT）。日付が無ければ目安にしない。
+        is_approximate = s.is_approximate and s.date is not None
+        conn.execute(
+            "INSERT INTO schedules "
+            "(event_id, title, kind, is_deadline, is_approximate, date, end_date, "
+            "time, end_time, raw_date_text, commit_state, created_at) "
+            "VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, NULL, ?, ?)",
+            (
+                event_id,
+                s.title,
+                1 if s.is_deadline else 0,
+                1 if is_approximate else 0,
+                s.date,
+                s.end_date,
+                s.time,
+                s.end_time,
+                "committed" if s.committed else "floating",
                 now,
             ),
         )
@@ -128,6 +190,7 @@ def undated_schedules(conn: sqlite3.Connection) -> list[UndatedSchedule]:
             event_title=row["event_title"],
             title=row["title"],
             raw_date_text=row["raw_date_text"],
+            needs_fix=_looks_like_unreadable_date(row["raw_date_text"]),
         )
         for row in rows
     ]
@@ -284,6 +347,22 @@ def update_schedule(
 def delete_schedule(conn: sqlite3.Connection, schedule_id: int) -> None:
     conn.execute("DELETE FROM schedules WHERE id = ?", (schedule_id,))
     conn.commit()
+
+
+def add_blank_schedule(conn: sqlite3.Connection, event_id: int) -> int | None:
+    """既存イベントに空（タイトル無し・日時未定・浮いている）の予定を1件足す。
+
+    その場でインライン編集する前提。イベントが無ければ None。
+    """
+    exists = conn.execute("SELECT 1 FROM events WHERE id = ?", (event_id,)).fetchone()
+    if exists is None:
+        return None
+    cur = conn.execute(
+        "INSERT INTO schedules (event_id, title, created_at) VALUES (?, '', ?)",
+        (event_id, _now_iso()),
+    )
+    conn.commit()
+    return cur.lastrowid
 
 
 def update_note(conn: sqlite3.Connection, event_id: int, note: str) -> None:

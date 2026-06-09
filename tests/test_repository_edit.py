@@ -259,3 +259,74 @@ def test_get_event_image_for_image_event(conn: sqlite3.Connection) -> None:
 
 def test_get_event_image_none_for_text_event(conn: sqlite3.Connection) -> None:
     assert repository.get_event_image(conn, _seed(conn)) is None
+
+
+def test_create_manual_event_with_commit_and_undated(conn: sqlite3.Connection) -> None:
+    event_id = repository.create_manual_event(
+        conn,
+        "レアゾンHD 選考",
+        [
+            repository.ManualSchedule(title="一次面接", date="2026-08-20"),
+            repository.ManualSchedule(
+                title="最終面接", date="2026-09-05", time="10:00", committed=True
+            ),
+            repository.ManualSchedule(title="結果連絡"),  # 日付なし → 日時未定
+        ],
+    )
+    detail = repository.get_event_detail(conn, event_id)
+    assert detail is not None
+    assert detail.title == "レアゾンHD 選考"
+    by_title = {s.title: s for s in detail.schedules}
+    assert by_title["一次面接"].commit_state == "floating"
+    assert by_title["最終面接"].commit_state == "committed"  # 確定チェックを反映
+    assert by_title["最終面接"].time == "10:00"
+    assert by_title["結果連絡"].date is None  # 日時未定
+
+
+def test_manual_no_date_is_not_approximate(conn: sqlite3.Connection) -> None:
+    # 目安は日付を伴う属性。日付なしで is_approximate を渡しても目安にしない。
+    event_id = repository.create_manual_event(
+        conn, "X", [repository.ManualSchedule(title="未定面接", is_approximate=True)]
+    )
+    detail = repository.get_event_detail(conn, event_id)
+    assert detail is not None
+    assert detail.schedules[0].date is None
+    assert detail.schedules[0].is_approximate is False
+
+
+def test_add_blank_schedule(conn: sqlite3.Connection) -> None:
+    event_id = _seed(conn)
+    new_id = repository.add_blank_schedule(conn, event_id)
+    assert new_id is not None
+    detail = repository.get_event_detail(conn, event_id)
+    assert detail is not None
+    assert len(detail.schedules) == 3  # seed の2件＋空1件
+    blank = next(s for s in detail.schedules if s.id == new_id)
+    assert blank.title == ""
+    assert blank.date is None  # 日時未定で生まれる
+    assert blank.commit_state == "floating"
+
+
+def test_add_blank_schedule_missing_event(conn: sqlite3.Connection) -> None:
+    assert repository.add_blank_schedule(conn, 999) is None
+
+
+def test_undated_needs_fix_flags_unreadable_dates(conn: sqlite3.Connection) -> None:
+    repository.create_event(
+        conn,
+        ExtractionInput(kind="text", text="ポイント"),
+        ExtractionResult(
+            event_title="ポイント",
+            schedules=[
+                ExtractedSchedule(title="失効", raw_date_text="6/31"),  # 読めない日付
+                ExtractedSchedule(title="採否", raw_date_text="7月中"),  # 正当な未定
+                ExtractedSchedule(title="連絡", raw_date_text="後日発表"),  # 正当な未定
+                ExtractedSchedule(title="面接"),  # 原文なし
+            ],
+        ),
+    )
+    undated = {s.title: s for s in repository.undated_schedules(conn)}
+    assert undated["失効"].needs_fix is True
+    assert undated["採否"].needs_fix is False
+    assert undated["連絡"].needs_fix is False
+    assert undated["面接"].needs_fix is False
