@@ -25,6 +25,7 @@
         <a href="#base">基礎</a>
         <a href="#calendar">カレンダー画面</a>
         <a href="#event">イベント詳細画面</a>
+        <a href="#redesign">改修案</a>
       </nav>
     </header>
 
@@ -557,6 +558,294 @@
             <div class="spec__demo">
               <form class="delete-event"><button type="submit" class="danger">このイベントを削除</button></form>
             </div>
+          </div>
+        </div>
+      </section>
+      <!-- ================================================== 改修案 -->
+      <section id="redesign" class="group">
+        <h2 class="group-title">改修案（2026-06 のUI課題）</h2>
+        <p class="sub-note">
+          実利用で出た課題のうち UI に回す5件。意図・web/ 移植・バックエンドの申し送りは
+          <code>redesign-notes.md</code> 参照。抽出まわり（日付なし/不正→未定、取り込み後の即時表示）は対応済み。
+        </p>
+
+        <h3 class="sub-title">① 画像サムネの開閉を滑らかに（.intake-media）</h3>
+        <div class="specs specs--wide">
+          <div class="spec">
+            <p class="spec__label">.intake（サムネ無し＝閉）</p>
+            <div class="spec__demo spec__demo--stack">
+              <form class="intake" aria-label="予定の取り込み">
+                <div class="intake-media"></div>
+                <div class="intake-row">
+                  <label class="intake-add" aria-label="画像を追加">+<input type="file" accept="image/*" hidden /></label>
+                  <textarea rows="1" aria-label="取り込むテキスト" placeholder="予定を貼り付け、または画像を追加…"></textarea>
+                  <button type="submit" class="intake-submit" aria-label="取り込む">↑</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.intake（サムネ有り＝開）</p>
+            <div class="spec__demo spec__demo--stack">
+              <form class="intake" aria-label="予定の取り込み">
+                <div class="intake-media">
+                  <div class="intake-thumbs">
+                    <div class="intake-thumb">
+                      <img class="preview" alt="取り込む画像のプレビュー" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='72' height='72'%3E%3Crect width='72' height='72' fill='%23181715'/%3E%3C/svg%3E" />
+                      <button type="button" class="intake-thumb-x" aria-label="この画像を外す">×</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="intake-row">
+                  <label class="intake-add" aria-label="画像を追加">+<input type="file" accept="image/*" hidden /></label>
+                  <textarea rows="1" aria-label="取り込むテキスト" placeholder="予定を貼り付け、または画像を追加…"></textarea>
+                  <button type="submit" class="intake-submit" aria-label="取り込む">↑</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <p class="spec__desc">
+          <code>.intake-media</code> を常設し <code>:has(.intake-thumb)</code> で
+          <code>grid-template-rows: 0fr → 1fr</code> ＋ opacity を 0.25s。高さが伸びて下も滑らかに動く。<code>prefers-reduced-motion</code> で無効化。
+        </p>
+
+        <h3 class="sub-title">⑤ 手動追加: 入力バー左のカレンダーicon → イベント作成フォーム（イベント名＋予定を複数）</h3>
+        <div class="specs specs--full">
+          <div class="spec">
+            <p class="spec__label">.intake + .intake-cal（左のカレンダーicon）／ .manual-add（白枠・イベント名＋予定複数・下センターで追加）</p>
+            <div class="spec__demo spec__demo--stack">
+              <div class="composer-row">
+                <button type="button" class="intake-cal" aria-label="手で追加" aria-expanded="true">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <rect x="3.5" y="5" width="17" height="16" rx="2" />
+                    <line x1="3.5" y1="9.5" x2="20.5" y2="9.5" />
+                    <line x1="8" y1="3" x2="8" y2="6" />
+                    <line x1="16" y1="3" x2="16" y2="6" />
+                  </svg>
+                </button>
+                <form class="intake" aria-label="予定の取り込み">
+                  <div class="intake-row">
+                    <label class="intake-add" aria-label="画像を追加">+<input type="file" accept="image/*" hidden /></label>
+                    <textarea rows="1" aria-label="取り込むテキスト" placeholder="予定を貼り付け、または画像を追加…"></textarea>
+                    <button type="submit" class="intake-submit" aria-label="取り込む">↑</button>
+                  </div>
+                </form>
+              </div>
+              <form class="manual-add" aria-label="イベントを手で追加">
+                <div class="title-form">
+                  <label for="ma-event">イベント名</label>
+                  <input id="ma-event" type="text" placeholder="イベント名（例: レアゾンHD 選考）" />
+                </div>
+                <ul class="sched-list">
+                  <li class="sched floating">
+                    <div class="sched-form" role="group" aria-label="予定1">
+                      <input class="sched-title" type="text" placeholder="予定名（例: 一次面接）" aria-label="予定名" />
+                      <label>日付 <input type="date" /></label>
+                      <label>終了 <input type="date" /></label>
+                      <label>開始時刻 <input type="text" placeholder="hh:mm" maxlength="5" inputmode="numeric" /></label>
+                      <label>終了時刻 <input type="text" placeholder="hh:mm" maxlength="5" inputmode="numeric" /></label>
+                      <span class="sched-flags">
+                        <label class="check"><input type="checkbox" /> 締切</label>
+                        <label class="check"><input type="checkbox" /> 目安</label>
+                      </span>
+                    </div>
+                    <div class="sched-commit">
+                      <label class="check commit-check"><input type="checkbox" /> 確定</label>
+                      <button type="button" class="danger">削除</button>
+                    </div>
+                  </li>
+                  <li class="sched committed">
+                    <div class="sched-form" role="group" aria-label="予定2">
+                      <input class="sched-title" type="text" value="最終面接" aria-label="予定名" />
+                      <label>日付 <input type="date" value="2026-09-05" /></label>
+                      <label>終了 <input type="date" /></label>
+                      <label>開始時刻 <input type="text" value="10:00" placeholder="hh:mm" maxlength="5" inputmode="numeric" /></label>
+                      <label>終了時刻 <input type="text" placeholder="hh:mm" maxlength="5" inputmode="numeric" /></label>
+                      <span class="sched-flags">
+                        <label class="check"><input type="checkbox" /> 締切</label>
+                        <label class="check"><input type="checkbox" /> 目安</label>
+                      </span>
+                    </div>
+                    <div class="sched-commit">
+                      <label class="check commit-check"><input type="checkbox" checked /> 確定</label>
+                      <button type="button" class="danger">削除</button>
+                    </div>
+                  </li>
+                </ul>
+                <button type="button" class="sched-add">＋予定を追加</button>
+                <div class="manual-add__foot">
+                  <button type="submit" class="primary">追加</button>
+                </div>
+              </form>
+            </div>
+            <p class="spec__desc">
+              入力バー左のカレンダーicon（<code>.intake-cal</code>）で <code>.manual-add</code> をトグル。中身は<strong>イベント詳細画面とほぼ同じ</strong>＝最上部に <code>.title-form</code> のイベント名、その下に <code>.sched</code> カードを複数（<code>.sched-add</code> で増やす＝⑧と共通）。確定は <code>.sched-commit</code> 行の<strong>「確定」チェック1つ</strong>（オンで <code>.sched.committed</code> 表示。浮いているが既定）。<strong>白背景は無し</strong>、幅も<strong>入力バーに合わせない</strong>（詳細画面と同じ）。追加ボタンは下センター。日付を空にした予定は日時未定。要 <code>POST /api/manual</code>（event_title＋schedules[]）。
+            </p>
+          </div>
+        </div>
+
+        <h3 class="sub-title">⑥ 5/6週でフッターを動かさない（.cal-grid-wrap で6週確保）</h3>
+        <div class="specs specs--full">
+          <div class="spec">
+            <p class="spec__label">.cal-grid-wrap（5週月＝下に1行ぶんの余白を確保）</p>
+            <div class="spec__demo spec__demo--flush">
+              <div class="cal-grid-wrap">
+                <table class="cal-grid">
+                  <thead>
+                    <tr>
+                      <th class="cal-weekday" scope="col">日</th>
+                      <th class="cal-weekday" scope="col">月</th>
+                      <th class="cal-weekday" scope="col">火</th>
+                      <th class="cal-weekday" scope="col">水</th>
+                      <th class="cal-weekday" scope="col">木</th>
+                      <th class="cal-weekday" scope="col">金</th>
+                      <th class="cal-weekday" scope="col">土</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class="cal-day"><time class="cal-daynum">1</time></td>
+                      <td class="cal-day"><time class="cal-daynum">2</time></td>
+                      <td class="cal-day"><time class="cal-daynum">3</time></td>
+                      <td class="cal-day"><time class="cal-daynum">4</time></td>
+                      <td class="cal-day"><time class="cal-daynum">5</time></td>
+                      <td class="cal-day"><time class="cal-daynum">6</time></td>
+                      <td class="cal-day"><time class="cal-daynum">7</time></td>
+                    </tr>
+                    <tr>
+                      <td class="cal-day"><time class="cal-daynum">8</time></td>
+                      <td class="cal-day"><time class="cal-daynum">9</time></td>
+                      <td class="cal-day"><time class="cal-daynum">10</time></td>
+                      <td class="cal-day">
+                        <time class="cal-daynum">11</time>
+                        <ul class="cal-chips"><li class="chip committed"><a href="#"><span class="chip-name">口頭発表</span></a></li></ul>
+                      </td>
+                      <td class="cal-day"><time class="cal-daynum">12</time></td>
+                      <td class="cal-day"><time class="cal-daynum">13</time></td>
+                      <td class="cal-day"><time class="cal-daynum">14</time></td>
+                    </tr>
+                    <tr>
+                      <td class="cal-day"><time class="cal-daynum">15</time></td>
+                      <td class="cal-day"><time class="cal-daynum">16</time></td>
+                      <td class="cal-day"><time class="cal-daynum">17</time></td>
+                      <td class="cal-day"><time class="cal-daynum">18</time></td>
+                      <td class="cal-day"><time class="cal-daynum">19</time></td>
+                      <td class="cal-day"><time class="cal-daynum">20</time></td>
+                      <td class="cal-day"><time class="cal-daynum">21</time></td>
+                    </tr>
+                    <tr>
+                      <td class="cal-day"><time class="cal-daynum">22</time></td>
+                      <td class="cal-day"><time class="cal-daynum">23</time></td>
+                      <td class="cal-day"><time class="cal-daynum">24</time></td>
+                      <td class="cal-day"><time class="cal-daynum">25</time></td>
+                      <td class="cal-day"><time class="cal-daynum">26</time></td>
+                      <td class="cal-day"><time class="cal-daynum">27</time></td>
+                      <td class="cal-day"><time class="cal-daynum">28</time></td>
+                    </tr>
+                    <tr>
+                      <td class="cal-day"><time class="cal-daynum">29</time></td>
+                      <td class="cal-day"><time class="cal-daynum">30</time></td>
+                      <td class="cal-day"><time class="cal-daynum">31</time></td>
+                      <td class="cal-day out"><time class="cal-daynum">1</time></td>
+                      <td class="cal-day out"><time class="cal-daynum">2</time></td>
+                      <td class="cal-day out"><time class="cal-daynum">3</time></td>
+                      <td class="cal-day out"><time class="cal-daynum">4</time></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <p class="spec__desc">
+              5週の月は表の下に1行ぶんの余白が残るだけで、フッター位置は6週月と揃う。日セル高は <code>--cal-day-h</code> で確保量（6週ぶん）と同期。
+            </p>
+          </div>
+        </div>
+
+        <h3 class="sub-title">⑦ 日時未定を右サイドバーへ（主張は弱め・常時表示）＋② 要確認</h3>
+        <div class="specs specs--wide">
+          <div class="spec">
+            <p class="spec__label">.side-panel（控えめ・小さめの文字）</p>
+            <div class="spec__demo spec__demo--stack">
+              <aside class="side-panel">
+                <div class="side-panel__head">
+                  <span class="side-panel__title">日時未定</span>
+                  <span class="side-panel__count">3</span>
+                </div>
+                <div class="undated-list">
+                  <a class="undated-card" href="#">
+                    <span class="undated-card__what">採否通知</span>
+                    <span class="undated-card__ev">PACLIC 2026 国際会議</span>
+                    <span class="undated-card__raw">7月中</span>
+                  </a>
+                  <a class="undated-card" href="#">
+                    <span class="undated-card__what">レアゾンHD面接</span>
+                    <span class="undated-card__ev">レアゾンHD</span>
+                  </a>
+                  <a class="undated-card needs-fix" href="#">
+                    <span class="undated-card__what">イオンポイント失効</span>
+                    <span class="undated-card__ev">イオンポイント</span>
+                    <span class="undated-card__raw">6/31</span>
+                    <span class="badge-fix">日付を確認</span>
+                  </a>
+                </div>
+              </aside>
+            </div>
+            <p class="spec__desc">
+              パネル自体はカードにせず、<strong>各未定を白背景チップ</strong>に（要確認だけ黄色背景）。畳みタブ（旧 .side-rail）は廃止し、文字を小さく主張を弱める。未定0件ならパネルごと隠す。狭い画面ではカレンダー下へ積む。
+            </p>
+          </div>
+          <div class="spec">
+            <p class="spec__label">.undated-card 通常 ／ .needs-fix（② 要確認）</p>
+            <div class="spec__demo spec__demo--canvas spec__demo--stack">
+              <a class="undated-card" href="#">
+                <span class="undated-card__what">カメラレディ締切</span>
+                <span class="undated-card__ev">PACLIC 2026 国際会議</span>
+                <span class="undated-card__raw">後日発表</span>
+              </a>
+              <a class="undated-card needs-fix" href="#">
+                <span class="undated-card__what">イオンポイント失効</span>
+                <span class="undated-card__ev">イオンポイント</span>
+                <span class="undated-card__raw">6/31</span>
+                <span class="badge-fix">日付を確認</span>
+              </a>
+            </div>
+            <p class="spec__desc">
+              不正/読めない日付（例 6/31）は未定に落とした上で要確認表示。正当な未定（7月中・後日発表）はニュートラルのまま。
+            </p>
+          </div>
+        </div>
+
+        <h3 class="sub-title">⑧ 詳細画面に予定を追加（グルーピング .sched-add）</h3>
+        <div class="specs specs--full">
+          <div class="spec">
+            <p class="spec__label">イベント詳細: .sched-list の下に .sched-add（同じイベントに予定を足す）</p>
+            <div class="spec__demo spec__demo--stack">
+              <ul class="sched-list">
+                <li class="sched floating">
+                  <form class="sched-form" aria-label="予定の編集">
+                    <input class="sched-title" value="一次面接" aria-label="予定名" />
+                    <label>日付 <input type="date" value="2026-08-20" /></label>
+                    <label>終了 <input type="date" /></label>
+                    <label>開始時刻 <input type="text" value="14:00" placeholder="hh:mm" /></label>
+                    <label>終了時刻 <input type="text" placeholder="hh:mm" /></label>
+                    <span class="sched-flags">
+                      <label class="check"><input type="checkbox" /> 締切</label>
+                      <label class="check"><input type="checkbox" /> 目安</label>
+                    </span>
+                  </form>
+                  <div class="sched-commit">
+                    <span class="sched-state">浮いている</span>
+                    <button type="button" class="primary">確定にする</button>
+                    <button type="button" class="danger">削除</button>
+                  </div>
+                </li>
+              </ul>
+              <button type="button" class="sched-add">＋予定を追加</button>
+            </div>
+            <p class="spec__desc">
+              既存イベント（普通のチップから開いた詳細画面）でも <code>.sched-add</code> で同じイベントに予定を足せる。押すと空の予定を1件作成→その場でインライン編集（自動保存）。要 <code>POST /api/events/{id}/schedules</code>。
+            </p>
           </div>
         </div>
       </section>

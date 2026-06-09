@@ -50,6 +50,10 @@
   --rounded-md: 8px;
   --rounded-lg: 12px;
   --rounded-pill: 9999px;
+
+  /* カレンダーの日セル高（⑥ 6週ぶんの高さ確保と1か所で同期） */
+  --cal-day-h: 104px;
+  --cal-weekday-h: 30px;
 }
 
 /* --- リセット ----------------------------------------------------- */
@@ -416,6 +420,7 @@ input[type="file"]::file-selector-button:hover {
   flex-direction: column;
   gap: var(--space-sm);
   max-width: 560px;
+  margin-inline: auto; /* 中央寄せ。手動入力(.manual-add)と中心をそろえる */
   padding: var(--space-sm);
   background: var(--canvas);
   border: 1px solid var(--hairline);
@@ -555,7 +560,7 @@ input[type="file"]::file-selector-button:hover {
   border-bottom: 1px solid var(--hairline);
 }
 .cal-day {
-  height: 104px;
+  height: var(--cal-day-h);
   vertical-align: top;
   padding: var(--space-xxs);
   border: 1px solid var(--hairline-soft);
@@ -890,12 +895,205 @@ input[type="file"]::file-selector-button:hover {
   font-weight: 500;
 }
 
+/* =================================================================
+   ▼ 改修案（2026-06 のUI課題 ①⑤⑥⑦＋②）。web/ へ移植する製品スタイル。
+   ================================================================= */
+
+/* ① 画像サムネの出入りを滑らかに。.intake-media を常設し、中身が入ると開く */
+.intake-media {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.25s ease,
+    opacity 0.25s ease;
+}
+.intake-media:has(.intake-thumb) {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+.intake-media > .intake-thumbs {
+  overflow: hidden;
+  min-height: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .intake-media {
+    transition: none;
+  }
+}
+
+/* ⑤ 手動追加: カレンダーicon → 手動入力フォームをトグル。
+   icon は入力バー(.intake)の枠の外・左に置く（バー自体は中央のまま）。 */
+.composer-row {
+  position: relative;
+  max-width: 560px;
+  margin-inline: auto;
+}
+.composer-row .intake {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+}
+.intake-cal {
+  position: absolute;
+  right: calc(100% + var(--space-xs)); /* バー枠の左外 */
+  bottom: var(--space-sm); /* バー行に合わせる（サムネが出ても下端＝バーに揃う） */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: var(--rounded-pill);
+  border: 1px solid var(--hairline);
+  background: var(--canvas);
+  color: var(--muted);
+}
+.intake-cal:hover,
+.intake-cal[aria-expanded="true"] {
+  border-color: var(--muted-soft);
+  color: var(--ink);
+}
+/* 手動追加＝小さなイベント作成フォーム。中身はイベント詳細画面とほぼ同じ。
+   白背景・枠は付けない（詳細画面と同じく素のまま）。幅も入力バーに合わせない（max-width 無し）。 */
+.manual-add {
+  margin-top: var(--space-sm);
+  margin-inline: auto; /* 入力バーと中心をそろえる（幅は合わせない） */
+}
+.manual-add .title-form {
+  margin-bottom: var(--space-md);
+}
+.manual-add__foot {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-md);
+}
+.manual-add__foot .primary {
+  min-width: 160px;
+}
+
+/* 予定を1件足す（手動追加＝新規イベント／⑧ 詳細画面＝既存イベント で共用・全幅で統一） */
+.sched-add {
+  display: flex;
+  width: 100%;
+  margin-top: var(--space-sm);
+  background: transparent;
+  border: 1px dashed var(--hairline);
+  color: var(--muted);
+}
+.sched-add:hover {
+  border: 1px dashed var(--muted-soft);
+  color: var(--ink);
+}
+
+/* 確定は「確定」チェック1つ（詳細はトグルのまま。手動追加の作成時はこれで初期状態を決める） */
+.sched-commit .commit-check {
+  margin-right: auto;
+}
+
+/* ⑥ 5/6週でフッターを動かさない: 6週ぶんの高さを確保（5週月は下に余白） */
+.cal-grid-wrap {
+  min-block-size: calc(var(--cal-weekday-h) + 6 * var(--cal-day-h));
+}
+
+/* ⑦ 日時未定を右サイドバーへ。常時表示・主張は弱め（畳みタブ side-rail は廃止） */
+.cal-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: var(--space-xl);
+  align-items: start;
+}
+.side-panel {
+  position: sticky;
+  top: var(--space-md);
+}
+.side-panel__head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-xs);
+}
+.side-panel__title {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  color: var(--muted);
+}
+.side-panel__count {
+  font-size: 11px;
+  color: var(--muted-soft);
+}
+
+/* 未定: 各予定ごとに白背景のチップ（控えめ・小さめの文字） */
+.undated-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+.undated-card {
+  display: block;
+  padding: var(--space-xs) var(--space-sm);
+  background: #fff;
+  border: 1px solid var(--hairline-soft);
+  border-radius: var(--rounded-md);
+}
+.undated-card:hover {
+  border-color: var(--muted-soft);
+}
+.undated-card__what {
+  display: block;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--body);
+}
+.undated-card__ev {
+  display: block;
+  margin-top: 1px;
+  font-size: 11px;
+  color: var(--muted-soft);
+}
+.undated-card__raw {
+  font-size: 11px;
+  color: var(--muted-soft);
+}
+
+/* ② 不正/読めない日付の「要確認」だけ黄色背景にする（通常は白チップ） */
+.undated-card.needs-fix {
+  border-color: color-mix(in srgb, var(--warning) 45%, var(--hairline));
+  background: color-mix(in srgb, var(--warning) 16%, #fff);
+}
+.undated-card.needs-fix .undated-card__raw {
+  color: var(--warning);
+}
+.badge-fix {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  padding: 1px 8px;
+  border-radius: var(--rounded-pill);
+  background: color-mix(in srgb, var(--warning) 18%, transparent);
+  color: var(--warning);
+  font-size: 11px;
+  font-weight: 600;
+}
+
 /* レスポンシブ ----------------------------------------------------- */
+@media (max-width: 880px) {
+  /* ⑦ 狭い画面ではサイドバーをカレンダー下へ積む */
+  .cal-layout {
+    grid-template-columns: 1fr;
+  }
+  .side-panel {
+    position: static;
+  }
+}
 @media (max-width: 720px) {
   .catalog-title {
     font-size: 30px;
   }
-  .cal-day {
-    height: 84px;
+  /* 日セル高を縮め、6週確保（--cal-day-h 依存）も自動で追従させる */
+  :root {
+    --cal-day-h: 84px;
   }
 }
