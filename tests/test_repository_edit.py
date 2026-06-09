@@ -311,6 +311,23 @@ def test_add_blank_schedule_missing_event(conn: sqlite3.Connection) -> None:
     assert repository.add_blank_schedule(conn, 999) is None
 
 
+def test_eventless_events_lists_only_schedule_less_events(
+    conn: sqlite3.Connection,
+) -> None:
+    with_sched = _seed(conn)  # 予定あり
+    empty_id = repository.create_manual_event(conn, "予定なしイベント", [])  # 予定0件
+    eventless = repository.eventless_events(conn)
+    ids = {e.event_id for e in eventless}
+    assert empty_id in ids  # 予定が無いイベントは出る
+    assert with_sched not in ids  # 予定があるイベントは出ない
+    # 全予定を消したら、そのイベントも eventless に現れる（孤児化の導線）
+    detail = repository.get_event_detail(conn, with_sched)
+    assert detail is not None
+    for s in detail.schedules:
+        repository.delete_schedule(conn, s.id)
+    assert with_sched in {e.event_id for e in repository.eventless_events(conn)}
+
+
 def test_undated_needs_fix_flags_unreadable_dates(conn: sqlite3.Connection) -> None:
     repository.create_event(
         conn,

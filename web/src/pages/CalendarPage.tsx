@@ -347,7 +347,7 @@ function ManualForm({
           id="manual-event"
           value={eventTitle}
           onChange={(e) => setEventTitle(e.target.value)}
-          placeholder="イベントの名前を入力してください"
+          placeholder="イベントを入力してください"
         />
       </div>
       <ul className="sched-list">
@@ -365,7 +365,7 @@ function ManualForm({
                 className="sched-title"
                 value={s.title}
                 aria-label="予定名"
-                placeholder="予定の名前を入力してください"
+                placeholder="予定を入力してください"
                 onChange={(e) => update(s.id, { title: e.target.value })}
               />
               <label>
@@ -567,8 +567,8 @@ export function CalendarPage() {
   if (error) return <p role="alert">読み込みに失敗しました: {error}</p>
   if (!data) return <p role="status">読み込み中…</p>
 
-  const { view, undated, weekday_labels, today } = data
-  const hasUndated = undated.length > 0
+  const { view, undated, eventless, weekday_labels, today } = data
+  const hasSidePanel = undated.length > 0 || eventless.length > 0
 
   return (
     <>
@@ -576,7 +576,7 @@ export function CalendarPage() {
 
       <Composer month={view.ym} onDone={onIntakeDone} />
 
-      <div className={hasUndated ? 'cal-layout' : undefined}>
+      <div className={hasSidePanel ? 'cal-layout' : undefined}>
         <section className="calendar" aria-label="月カレンダー">
           <nav className="cal-nav" aria-label="月の移動">
             <button type="button" onClick={() => goMonth(view.prev_month)}>
@@ -619,11 +619,13 @@ export function CalendarPage() {
           </div>
         </section>
 
-        {hasUndated && (
-          <aside className="side-panel" aria-label="日時未定の予定">
+        {hasSidePanel && (
+          <aside className="side-panel" aria-label="日時未定・予定なし">
             <div className="side-panel__head">
               <span className="side-panel__title">日時未定</span>
-              <span className="side-panel__count">{undated.length}</span>
+              <span className="side-panel__count">
+                {undated.length + eventless.length}
+              </span>
             </div>
             <div className="undated-list">
               {undated.map((s) => (
@@ -641,6 +643,16 @@ export function CalendarPage() {
                     <span className="undated-card__raw">{s.raw_date_text}</span>
                   )}
                   {s.needs_fix && <span className="badge-fix">日付を確認</span>}
+                </Link>
+              ))}
+              {eventless.map((e) => (
+                <Link
+                  key={`eventless-${e.event_id}`}
+                  className="undated-card"
+                  to={`/events/${e.event_id}`}
+                >
+                  <span className="undated-card__what">{e.event_title}</span>
+                  <span className="undated-card__raw">予定なし</span>
                 </Link>
               ))}
             </div>

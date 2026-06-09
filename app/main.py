@@ -73,12 +73,14 @@ def get_calendar(month: str | None = None) -> dict[str, Any]:
     try:
         dated = repository.dated_schedules(conn)
         undated = repository.undated_schedules(conn)
+        eventless = repository.eventless_events(conn)
     finally:
         conn.close()
     view = calendar_view.build_month(year, month_num, dated)
     return {
         "view": view,
         "undated": undated,
+        "eventless": eventless,
         "weekday_labels": calendar_view.WEEKDAY_LABELS,
         "today": date.today().isoformat(),
     }

@@ -37,9 +37,15 @@ export interface MonthView {
   next_month: string
 }
 
+export interface EventlessEvent {
+  event_id: number
+  event_title: string
+}
+
 export interface CalendarResponse {
   view: MonthView
   undated: UndatedSchedule[]
+  eventless: EventlessEvent[] // 予定が0件のイベント（導線確保のため出す）
   weekday_labels: string[]
   today: string // "YYYY-MM-DD"
 }

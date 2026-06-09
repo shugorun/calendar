@@ -197,6 +197,26 @@ def undated_schedules(conn: sqlite3.Connection) -> list[UndatedSchedule]:
 
 
 @dataclass
+class EventlessEvent:
+    """予定が1件も無いイベント。カレンダーにも未定にも出ないので導線が要る。"""
+
+    event_id: int
+    event_title: str
+
+
+def eventless_events(conn: sqlite3.Connection) -> list[EventlessEvent]:
+    """予定を1件も持たないイベント（取り込んだが日付が拾えなかった等）を返す。"""
+    rows = conn.execute(
+        "SELECT e.id, e.title FROM events e "
+        "WHERE NOT EXISTS (SELECT 1 FROM schedules s WHERE s.event_id = e.id) "
+        "ORDER BY e.id"
+    ).fetchall()
+    return [
+        EventlessEvent(event_id=row["id"], event_title=row["title"]) for row in rows
+    ]
+
+
+@dataclass
 class EditableSchedule:
     id: int
     title: str
