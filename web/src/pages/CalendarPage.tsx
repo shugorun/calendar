@@ -1,14 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import type { CSSProperties, FormEvent } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { getCalendar, intake, manualAdd } from '../api'
-import { IntakeComposer } from '../components/IntakeComposer'
-import {
-  formatDateInput,
-  formatTimeInput,
-  isoToJaDate,
-  toIsoDateOrNull,
-} from '../format'
+import { Composer } from '../components/Composer'
+import { isoToJaDate } from '../format'
 import type { CalendarResponse, DatedSchedule, DayCell } from '../types'
 
 const MAX_CHIPS = 3
@@ -133,295 +128,6 @@ function CalDay({ cell, today }: { cell: DayCell; today: string }) {
   )
 }
 
-interface ManualSched {
-  id: number
-  title: string
-  date: string
-  end_date: string
-  time: string
-  end_time: string
-  is_deadline: boolean
-  is_approximate: boolean
-  committed: boolean
-}
-
-function blankSched(id: number): ManualSched {
-  return {
-    id,
-    title: '',
-    date: '',
-    end_date: '',
-    time: '',
-    end_time: '',
-    is_deadline: false,
-    is_approximate: false,
-    committed: false,
-  }
-}
-
-// 手動追加: AIを介さず「イベント名＋予定を複数」で1イベントを作る（詳細画面とほぼ同じ）。
-function ManualForm({
-  month,
-  onDone,
-}: {
-  month: string
-  onDone: (landedMonth: string) => void
-}) {
-  const [eventTitle, setEventTitle] = useState('')
-  const [scheds, setScheds] = useState<ManualSched[]>(() => [blankSched(0)])
-  const [submitting, setSubmitting] = useState(false)
-  const nextId = useRef(1)
-
-  function update(id: number, patch: Partial<ManualSched>) {
-    setScheds((prev) => prev.map((s) => (s.id === id ? { ...s, ...patch } : s)))
-  }
-  function addSched() {
-    setScheds((prev) => [...prev, blankSched(nextId.current++)])
-  }
-  function removeSched(id: number) {
-    setScheds((prev) =>
-      prev.length > 1 ? prev.filter((s) => s.id !== id) : prev,
-    )
-  }
-
-  async function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSubmitting(true)
-    try {
-      const { month: landed } = await manualAdd({
-        event_title: eventTitle,
-        month,
-        schedules: scheds.map((s) => ({
-          title: s.title,
-          date: toIsoDateOrNull(s.date), // 未完成・不正な日付は日時未定にする
-          end_date: toIsoDateOrNull(s.end_date),
-          time: s.time || null,
-          end_time: s.end_time || null,
-          is_deadline: s.is_deadline,
-          is_approximate: s.is_approximate,
-          committed: s.committed,
-        })),
-      })
-      onDone(landed)
-    } finally {
-      setSubmitting(false)
-    }
-  }
-
-  // イベント名が空でも、予定に中身があれば保存できる（バックは名前を「取り込み」に補完）。
-  const hasContent =
-    eventTitle.trim().length > 0 ||
-    scheds.some((s) => s.title.trim().length > 0 || s.date.length > 0)
-  const canSubmit = hasContent && !submitting
-
-  return (
-    <form
-      className="manual-add"
-      aria-label="イベントを手で追加"
-      onSubmit={onSubmit}
-    >
-      <div className="title-form">
-        <label htmlFor="manual-event">イベント名</label>
-        <input
-          id="manual-event"
-          value={eventTitle}
-          onChange={(e) => setEventTitle(e.target.value)}
-          placeholder="イベントを入力してください"
-        />
-      </div>
-      <ul className="sched-list">
-        {scheds.map((s, i) => (
-          <li
-            key={s.id}
-            className={`sched ${s.committed ? 'committed' : 'floating'}`}
-          >
-            <div
-              className="sched-form"
-              role="group"
-              aria-label={`予定${i + 1}`}
-            >
-              <input
-                className="sched-title"
-                value={s.title}
-                aria-label="予定名"
-                placeholder="予定を入力してください"
-                onChange={(e) => update(s.id, { title: e.target.value })}
-              />
-              <label>
-                日付{' '}
-                <input
-                  type="text"
-                  className="sched-date"
-                  value={s.date}
-                  placeholder="yyyy-mm-dd"
-                  maxLength={10}
-                  inputMode="numeric"
-                  onChange={(e) =>
-                    update(s.id, { date: formatDateInput(e.target.value) })
-                  }
-                />
-              </label>
-              <label>
-                終了{' '}
-                <input
-                  type="text"
-                  className="sched-date"
-                  value={s.end_date}
-                  placeholder="yyyy-mm-dd"
-                  maxLength={10}
-                  inputMode="numeric"
-                  onChange={(e) =>
-                    update(s.id, { end_date: formatDateInput(e.target.value) })
-                  }
-                />
-              </label>
-              <label>
-                開始時刻{' '}
-                <input
-                  type="text"
-                  value={s.time}
-                  placeholder="hh:mm"
-                  maxLength={5}
-                  inputMode="numeric"
-                  onChange={(e) =>
-                    update(s.id, { time: formatTimeInput(e.target.value) })
-                  }
-                />
-              </label>
-              <label>
-                終了時刻{' '}
-                <input
-                  type="text"
-                  value={s.end_time}
-                  placeholder="hh:mm"
-                  maxLength={5}
-                  inputMode="numeric"
-                  onChange={(e) =>
-                    update(s.id, { end_time: formatTimeInput(e.target.value) })
-                  }
-                />
-              </label>
-              <span className="sched-flags">
-                <label className="check">
-                  <input
-                    type="checkbox"
-                    checked={s.is_deadline}
-                    onChange={(e) =>
-                      update(s.id, { is_deadline: e.target.checked })
-                    }
-                  />{' '}
-                  締切
-                </label>
-                <label className="check">
-                  <input
-                    type="checkbox"
-                    checked={s.is_approximate}
-                    onChange={(e) =>
-                      update(s.id, { is_approximate: e.target.checked })
-                    }
-                  />{' '}
-                  目安
-                </label>
-              </span>
-            </div>
-            <div className="sched-commit">
-              <label className="check commit-check">
-                <input
-                  type="checkbox"
-                  checked={s.committed}
-                  onChange={(e) =>
-                    update(s.id, { committed: e.target.checked })
-                  }
-                />{' '}
-                確定
-              </label>
-              <button
-                type="button"
-                className="danger"
-                onClick={() => removeSched(s.id)}
-                disabled={scheds.length === 1}
-              >
-                削除
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
-      <button type="button" className="sched-add" onClick={addSched}>
-        ＋予定を追加
-      </button>
-      <div className="manual-add__foot">
-        <button type="submit" className="primary" disabled={!canSubmit}>
-          追加
-        </button>
-      </div>
-    </form>
-  )
-}
-
-// 取り込みバー（左にカレンダーicon）と、トグルで開く手動追加フォーム。
-function Composer({
-  month,
-  onDone,
-}: {
-  month: string
-  onDone: (landedMonth: string) => void
-}) {
-  const [manualOpen, setManualOpen] = useState(false)
-  // 送信後はフォームを作り直す（key を変えて未開状態でリセット）。
-  const [formKey, setFormKey] = useState(0)
-  return (
-    <div className="composer">
-      <div className="composer-row">
-        <button
-          type="button"
-          className="intake-cal"
-          aria-label="手で追加"
-          aria-expanded={manualOpen}
-          onClick={() => setManualOpen((open) => !open)}
-        >
-          <svg
-            viewBox="0 0 24 24"
-            width="18"
-            height="18"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-          >
-            <rect x="3.5" y="5" width="17" height="16" rx="2" />
-            <line x1="3.5" y1="9.5" x2="20.5" y2="9.5" />
-            <line x1="8" y1="3" x2="8" y2="6" />
-            <line x1="16" y1="3" x2="16" y2="6" />
-          </svg>
-        </button>
-        <IntakeComposer
-          submit={async (form) => {
-            form.set('month', month)
-            const { month: landed } = await intake(form)
-            onDone(landed)
-          }}
-        />
-      </div>
-      {/* 常設して 0fr→1fr で「ぬるっと」開く。閉じている間は inert で操作不可に */}
-      <div
-        className={manualOpen ? 'manual-reveal is-open' : 'manual-reveal'}
-        inert={!manualOpen}
-      >
-        <ManualForm
-          key={formKey}
-          month={month}
-          onDone={(landed) => {
-            setManualOpen(false)
-            setFormKey((k) => k + 1)
-            onDone(landed)
-          }}
-        />
-      </div>
-    </div>
-  )
-}
-
 export function CalendarPage() {
   const [params, setParams] = useSearchParams()
   const month = params.get('month')
@@ -459,7 +165,22 @@ export function CalendarPage() {
     <>
       <h1>Floaty</h1>
 
-      <Composer month={view.ym} onDone={onIntakeDone} />
+      <Composer
+        intakeSubmit={async (form) => {
+          form.set('month', view.ym)
+          const { month: landed } = await intake(form)
+          onIntakeDone(landed)
+        }}
+        manualWithEventTitle
+        manualSubmit={async (eventTitle, schedules) => {
+          const { month: landed } = await manualAdd({
+            event_title: eventTitle,
+            schedules,
+            month: view.ym,
+          })
+          onIntakeDone(landed)
+        }}
+      />
 
       <div className={hasSidePanel ? 'cal-layout' : undefined}>
         <section className="calendar" aria-label="月カレンダー">

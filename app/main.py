@@ -306,6 +306,36 @@ def add_schedule(event_id: int) -> dict[str, int]:
     return {"id": new_id}
 
 
+class ManualSchedulesBody(BaseModel):
+    schedules: list[ManualScheduleBody] = []
+
+
+@app.post("/api/events/{event_id}/manual-schedules")
+def add_manual_schedules(event_id: int, body: ManualSchedulesBody) -> dict[str, int]:
+    """既存イベントに、手で入力した予定（確定状態つき）をまとめて追加する。"""
+    schedules = [
+        repository.ManualSchedule(
+            title=s.title.strip(),
+            date=s.date or None,
+            end_date=s.end_date or None,
+            time=_norm_time(s.time or ""),
+            end_time=_norm_time(s.end_time or ""),
+            is_deadline=s.is_deadline,
+            is_approximate=s.is_approximate,
+            committed=s.committed,
+        )
+        for s in body.schedules
+    ]
+    conn = connect()
+    try:
+        added = repository.add_manual_schedules(conn, event_id, schedules)
+    finally:
+        conn.close()
+    if added < 0:
+        raise HTTPException(status_code=404, detail="イベントが見つかりません")
+    return {"added": added}
+
+
 @app.post("/api/schedules/{schedule_id}/commit", status_code=status.HTTP_204_NO_CONTENT)
 def commit_schedule(schedule_id: int, body: StateBody) -> Response:
     _check_state(body.state)

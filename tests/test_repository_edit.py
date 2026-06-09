@@ -348,6 +348,29 @@ def test_add_schedules_from_sets_source_when_empty(
     assert got[0] == b"IMG"
 
 
+def test_add_manual_schedules_appends_with_commit(conn: sqlite3.Connection) -> None:
+    event_id = repository.create_manual_event(conn, "選考", [])
+    added = repository.add_manual_schedules(
+        conn,
+        event_id,
+        [
+            repository.ManualSchedule(title="一次面接", date="2026-08-20"),
+            repository.ManualSchedule(title="最終面接", committed=True),
+        ],
+    )
+    assert added == 2
+    detail = repository.get_event_detail(conn, event_id)
+    assert detail is not None
+    by_title = {s.title: s for s in detail.schedules}
+    assert by_title["一次面接"].commit_state == "floating"
+    assert by_title["最終面接"].commit_state == "committed"  # 確定チェックを反映
+    assert by_title["最終面接"].date is None  # 日付なし → 日時未定
+
+
+def test_add_manual_schedules_missing_event(conn: sqlite3.Connection) -> None:
+    assert repository.add_manual_schedules(conn, 999, []) == -1
+
+
 def test_add_schedules_from_missing_event(conn: sqlite3.Connection) -> None:
     n = repository.add_schedules_from(
         conn, 999, ExtractionInput(kind="text", text="x"), ExtractionResult("x", [])

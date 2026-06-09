@@ -3,6 +3,7 @@ import type {
   CommitState,
   EventDetail,
   ManualEventInput,
+  ManualScheduleInput,
   ScheduleEdit,
 } from './types'
 
@@ -41,6 +42,19 @@ export function manualAdd(body: ManualEventInput): Promise<{ month: string }> {
 
 export function addSchedule(eventId: number): Promise<{ id: number }> {
   return postJson<{ id: number }>(`/api/events/${eventId}/schedules`, {})
+}
+
+// 既存イベントに、手で入力した予定（確定状態つき）をまとめて追加する。
+export function addManualSchedules(
+  eventId: number,
+  schedules: ManualScheduleInput[],
+): Promise<{ added: number }> {
+  return postJson<{ added: number }>(
+    `/api/events/${eventId}/manual-schedules`,
+    {
+      schedules,
+    },
+  )
 }
 
 // 既存イベントに、画像/テキストから抽出した予定を追加する。

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FocusEvent, FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import * as api from '../api'
-import { IntakeComposer } from '../components/IntakeComposer'
+import { Composer } from '../components/Composer'
 import { formatDateInput, formatTimeInput, toIsoDateOrNull } from '../format'
 import type { EditableSchedule, EventDetail } from '../types'
 
@@ -231,12 +231,6 @@ export function EventPage() {
     load()
   }
 
-  // 同じイベントに予定を1件足す（空で作ってその場でインライン編集）。
-  async function addSchedule() {
-    await api.addSchedule(eventId)
-    load()
-  }
-
   async function removeEvent(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     await api.deleteEvent(eventId)
@@ -287,13 +281,14 @@ export function EventPage() {
           ))}
         </ul>
       )}
-      <button type="button" className="sched-add" onClick={addSchedule}>
-        ＋予定を追加
-      </button>
-
-      <IntakeComposer
-        submit={async (form) => {
+      <Composer
+        intakeSubmit={async (form) => {
           await api.intakeIntoEvent(eventId, form)
+          load()
+        }}
+        manualWithEventTitle={false}
+        manualSubmit={async (_eventTitle, schedules) => {
+          await api.addManualSchedules(eventId, schedules)
           load()
         }}
       />

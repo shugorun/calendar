@@ -369,6 +369,39 @@ def delete_schedule(conn: sqlite3.Connection, schedule_id: int) -> None:
     conn.commit()
 
 
+def add_manual_schedules(
+    conn: sqlite3.Connection, event_id: int, schedules: list[ManualSchedule]
+) -> int:
+    """既存イベントに手動入力の予定を追加。返り値=追加件数。イベントが無ければ -1。"""
+    exists = conn.execute("SELECT 1 FROM events WHERE id = ?", (event_id,)).fetchone()
+    if exists is None:
+        return -1
+    now = _now_iso()
+    for s in schedules:
+        # 目安は日付を伴う属性（CONTEXT）。日付が無ければ目安にしない。
+        is_approximate = s.is_approximate and s.date is not None
+        conn.execute(
+            "INSERT INTO schedules "
+            "(event_id, title, kind, is_deadline, is_approximate, date, end_date, "
+            "time, end_time, raw_date_text, commit_state, created_at) "
+            "VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, NULL, ?, ?)",
+            (
+                event_id,
+                s.title,
+                1 if s.is_deadline else 0,
+                1 if is_approximate else 0,
+                s.date,
+                s.end_date,
+                s.time,
+                s.end_time,
+                "committed" if s.committed else "floating",
+                now,
+            ),
+        )
+    conn.commit()
+    return len(schedules)
+
+
 def add_schedules_from(
     conn: sqlite3.Connection,
     event_id: int,
